@@ -40,6 +40,35 @@
                 </div>
             </div>
 
+            <!-- Toolbar Simulasi Demo Presentasi Dosen -->
+            <div class="card border-primary border-opacity-25 bg-primary bg-opacity-10 shadow-sm mb-4">
+                <div class="card-body p-3 d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="bg-primary text-white rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                            <i class="bi bi-magic fs-5"></i>
+                        </div>
+                        <div>
+                            <strong class="text-primary d-block small">Preset Simulasi Demo Pengujian Dosen (Live Demo):</strong>
+                            <span class="text-muted" style="font-size: 0.75rem;">Klik tombol di samping untuk membuktikan akurasi aturan bisnis secara instan:</span>
+                        </div>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-success bg-white shadow-sm" id="btnPresetTepatWaktu">
+                            <i class="bi bi-check-circle me-1"></i> Tepat Waktu (Denda Rp0)
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-info bg-white shadow-sm" id="btnPresetGracePeriod">
+                            <i class="bi bi-clock-history me-1"></i> Telat 3 Hari (Grace Period Rp0)
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-warning bg-white shadow-sm" id="btnPresetTelat4Hari">
+                            <i class="bi bi-exclamation-triangle me-1"></i> Telat 4 Hari (Denda Rp2.000)
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-danger bg-white shadow-sm" id="btnPresetTelat5Rusak">
+                            <i class="bi bi-lightning-charge me-1"></i> Telat 5 Hari + 1 Rusak (Rp14.000)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Card 2: Tanggal Pengembalian & Kalkulator Keterlambatan Real-time -->
             <div class="card shadow-sm mb-4">
                 <div class="card-header bg-white py-3 border-bottom">
@@ -111,7 +140,19 @@
                                     <tr class="baris-detail-inspeksi" data-id="{{ $detail->id }}" data-jumlah="{{ $detail->jumlah }}">
                                         <td>
                                             <div class="fw-semibold text-dark">{{ $detail->alat->nama_alat }}</div>
-                                            <small class="text-muted font-monospace">{{ $detail->alat->kode_alat }}</small>
+                                            <div class="small text-muted font-monospace">{{ $detail->alat->kode_alat }}</div>
+                                            @if($detail->kode_unit_dipinjam)
+                                                <div class="mt-1 d-flex flex-wrap gap-1 align-items-center">
+                                                    <span class="badge bg-light text-secondary border font-monospace" style="font-size: 0.7rem;">
+                                                        <i class="bi bi-upc-scan text-primary me-1"></i>Kode Unit:
+                                                    </span>
+                                                    @foreach($detail->unit_list as $unitCode)
+                                                        <span class="badge bg-primary-subtle text-primary border border-primary font-monospace" style="font-size: 0.72rem;">
+                                                            {{ $unitCode }}
+                                                        </span>
+                                                    @endforeach
+                                                </div>
+                                            @endif
                                         </td>
                                         <td class="text-center">
                                             <span class="badge bg-secondary px-3 py-1 rounded-pill">{{ $detail->jumlah }} Unit</span>
@@ -167,6 +208,52 @@
                 </div>
             </div>
 
+            <!-- Card 5: Metode & Status Pembayaran Kasir Lab -->
+            <div class="card shadow-sm mb-4 border-secondary border-opacity-25" id="cardMetodeBayar">
+                <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
+                    <h6 class="mb-0 fw-bold text-dark">
+                        <i class="bi bi-wallet2 text-primary me-2"></i>Penyelesaian & Metode Pembayaran Kasir Lab
+                    </h6>
+                    <span class="badge bg-success-subtle text-success border border-success" id="badgeStatusBayarInfo">Bebas Biaya (Otomatis Lunas)</span>
+                </div>
+                <div class="card-body p-4" id="boxFormPembayaran">
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <label class="form-label small fw-semibold text-dark">Status Pelunasan Tagihan <span class="text-danger">*</span></label>
+                            <div class="d-flex flex-column gap-2 mt-1">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="status_pembayaran" id="statusLunas" value="lunas" checked>
+                                    <label class="form-check-label small fw-semibold text-success" for="statusLunas">
+                                        <i class="bi bi-check-circle-fill me-1"></i> Langsung Lunas (Dibayar saat Serah Terima di Lab)
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="status_pembayaran" id="statusBelumLunas" value="belum_lunas">
+                                    <label class="form-check-label small fw-semibold text-danger" for="statusBelumLunas">
+                                        <i class="bi bi-exclamation-circle-fill me-1"></i> Belum Lunas (Menunggak Denda)
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-text small mt-2" style="font-size: 0.75rem;">
+                                Catatan: Jika mahasiswa belum membayar, status tercatat sebagai <strong>Belum Lunas</strong> dan sistem otomatis memblokir peminjaman baru sampai denda diselesaikan.
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-md-6" id="wrapperMetodeBayar">
+                            <label for="metode_pembayaran" class="form-label small fw-semibold text-dark">Kanal / Metode Pembayaran <span class="text-danger">*</span></label>
+                            <select name="metode_pembayaran" id="metode_pembayaran" class="form-select">
+                                <option value="Tunai (Cash Meja Lab)">Tunai (Cash di Meja Lab)</option>
+                                <option value="QRIS Kas Laboratorium">QRIS Kas Laboratorium Terpadu</option>
+                                <option value="Transfer Bank Kas Lab">Transfer Bank (Rekening Kas Lab)</option>
+                            </select>
+                            <div class="form-text small" style="font-size: 0.75rem;">
+                                Pilih kanal pembayaran yang digunakan mahasiswa di meja laboratorium.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Tombol Konfirmasi Aksi -->
             <div class="d-flex align-items-center justify-content-end gap-2 mb-5">
                 <a href="{{ route('pengembalian.index') }}" class="btn btn-outline-secondary px-4">Batal</a>
@@ -195,6 +282,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const summaryDenda = document.getElementById('summaryDenda');
     const summaryPerbaikan = document.getElementById('summaryPerbaikan');
     const summaryTotalSemua = document.getElementById('summaryTotalSemua');
+
+    const badgeStatusBayarInfo = document.getElementById('badgeStatusBayarInfo');
+    const statusLunasRadio = document.getElementById('statusLunas');
+    const statusBelumLunasRadio = document.getElementById('statusBelumLunas');
+    const wrapperMetodeBayar = document.getElementById('wrapperMetodeBayar');
 
     function formatRupiah(num) {
         return 'Rp ' + (num || 0).toLocaleString('id-ID');
@@ -265,7 +357,69 @@ document.addEventListener('DOMContentLoaded', function () {
         const perbaikan = hitungKerusakan();
         const totalSemua = denda + perbaikan;
         summaryTotalSemua.textContent = formatRupiah(totalSemua);
+
+        // Update bagian metode pembayaran
+        if (totalSemua === 0) {
+            badgeStatusBayarInfo.textContent = 'Bebas Biaya (Otomatis Lunas)';
+            badgeStatusBayarInfo.className = 'badge bg-success-subtle text-success border border-success';
+            statusLunasRadio.checked = true;
+            statusBelumLunasRadio.disabled = true;
+            wrapperMetodeBayar.style.opacity = '0.5';
+            wrapperMetodeBayar.querySelector('select').disabled = true;
+        } else {
+            badgeStatusBayarInfo.textContent = 'Ada Tagihan Kasir: ' + formatRupiah(totalSemua);
+            badgeStatusBayarInfo.className = 'badge bg-danger-subtle text-danger border border-danger';
+            statusBelumLunasRadio.disabled = false;
+            updateRadioPembayaran();
+        }
     }
+
+    function updateRadioPembayaran() {
+        if (statusBelumLunasRadio.checked) {
+            wrapperMetodeBayar.style.opacity = '0.5';
+            wrapperMetodeBayar.querySelector('select').disabled = true;
+        } else {
+            wrapperMetodeBayar.style.opacity = '1';
+            wrapperMetodeBayar.querySelector('select').disabled = false;
+        }
+    }
+
+    statusLunasRadio.addEventListener('change', updateRadioPembayaran);
+    statusBelumLunasRadio.addEventListener('change', updateRadioPembayaran);
+
+    // Preset Demo Handlers untuk Pengujian Cepat Presentasi Dosen
+    function setPreset(daysOffset, rusakCount) {
+        const tempo = new Date(tglTempoStr + 'T00:00:00');
+        tempo.setDate(tempo.getDate() + daysOffset);
+        const yyyy = tempo.getFullYear();
+        const mm = String(tempo.getMonth() + 1).padStart(2, '0');
+        const dd = String(tempo.getDate()).padStart(2, '0');
+        tglKembaliInput.value = `${yyyy}-${mm}-${dd}`;
+
+        const inputsRusak = document.querySelectorAll('.input-rusak');
+        inputsRusak.forEach((inp, idx) => {
+            const maxVal = parseInt(inp.getAttribute('max') || 1);
+            if (idx === 0) {
+                inp.value = Math.min(rusakCount, maxVal);
+            } else {
+                inp.value = 0;
+            }
+        });
+
+        kalkulasiTotalSemua();
+    }
+
+    const btnTepatWaktu = document.getElementById('btnPresetTepatWaktu');
+    if (btnTepatWaktu) btnTepatWaktu.addEventListener('click', () => setPreset(0, 0));
+
+    const btnGracePeriod = document.getElementById('btnPresetGracePeriod');
+    if (btnGracePeriod) btnGracePeriod.addEventListener('click', () => setPreset(3, 0));
+
+    const btnTelat4Hari = document.getElementById('btnPresetTelat4Hari');
+    if (btnTelat4Hari) btnTelat4Hari.addEventListener('click', () => setPreset(4, 0));
+
+    const btnTelat5Rusak = document.getElementById('btnPresetTelat5Rusak');
+    if (btnTelat5Rusak) btnTelat5Rusak.addEventListener('click', () => setPreset(5, 1));
 
     // Event listener
     tglKembaliInput.addEventListener('change', kalkulasiTotalSemua);

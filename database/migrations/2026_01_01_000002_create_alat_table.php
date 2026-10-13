@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('kategori', 100);
             $table->unsignedInteger('stok_total');
             $table->unsignedInteger('stok_tersedia');
+            $table->unsignedInteger('stok_rusak')->default(0);
             $table->string('kondisi', 50)->default('Baik');
             $table->timestamps();
 

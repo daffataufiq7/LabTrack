@@ -30,6 +30,11 @@ class Peminjaman extends Model
         'status',
         'total_denda',
         'total_biaya_perbaikan',
+        'status_pembayaran',
+        'metode_pembayaran',
+        'waktu_pembayaran',
+        'catatan_admin',
+        'approved_at',
     ];
 
     protected $casts = [
@@ -38,6 +43,8 @@ class Peminjaman extends Model
         'tanggal_kembali' => 'date',
         'total_denda' => 'decimal:2',
         'total_biaya_perbaikan' => 'decimal:2',
+        'waktu_pembayaran' => 'datetime',
+        'approved_at' => 'datetime',
     ];
 
     public function mahasiswa(): BelongsTo
@@ -106,6 +113,24 @@ class Peminjaman extends Model
     {
         $hariKenaDenda = $this->hitungHariKenaDenda($tanggalRef);
         return (float) ($hariKenaDenda * self::TARIF_DENDA_PER_HARI);
+    }
+
+    /**
+     * Menghitung total tagihan (akumulasi denda keterlambatan + biaya perbaikan alat rusak).
+     */
+    public function totalTagihan(): float
+    {
+        return (float) ($this->total_denda + $this->total_biaya_perbaikan);
+    }
+
+    public function isLunas(): bool
+    {
+        return $this->status_pembayaran === 'lunas';
+    }
+
+    public function isBelumLunas(): bool
+    {
+        return $this->status_pembayaran === 'belum_lunas';
     }
 
     /**

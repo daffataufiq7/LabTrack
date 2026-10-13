@@ -86,6 +86,43 @@ class PeminjamanController extends Controller
             'items.*.jumlah.min' => 'Jumlah alat harus berupa angka positif minimal 1.',
         ]);
 
+        // 2. Validasi Aturan Bisnis Khusus (Batas Kuota & Tunggakan Keterlambatan)
+        // A. Cek apakah mahasiswa memiliki pinjaman aktif yang sudah terlambat (overdue)
+        $pinjamanTerlambat = Peminjaman::where('mahasiswa_id', $validated['mahasiswa_id'])
+            ->where('status', 'dipinjam')
+            ->where('tanggal_jatuh_tempo', '<', Carbon::today())
+            ->first();
+
+        if ($pinjamanTerlambat) {
+            $mhs = Mahasiswa::find($validated['mahasiswa_id']);
+            return back()->withInput()->with('error', "Peminjaman ditolak: Mahasiswa {$mhs->nama} masih memiliki transaksi peminjaman aktif yang telah melewati jatuh tempo ({$pinjamanTerlambat->kode_transaksi}). Harap selesaikan pengembalian sebelumnya terlebih dahulu.");
+        }
+
+        // A2. Cek apakah mahasiswa memiliki tunggakan denda/kerusakan yang BELUM LUNAS
+        $tunggakanDenda = Peminjaman::where('mahasiswa_id', $validated['mahasiswa_id'])
+            ->where('status_pembayaran', 'belum_lunas')
+            ->first();
+
+        if ($tunggakanDenda) {
+            $mhs = Mahasiswa::find($validated['mahasiswa_id']);
+            return back()->withInput()->with('error', "Peminjaman ditolak: Mahasiswa {$mhs->nama} masih memiliki tagihan denda/biaya perbaikan yang BELUM LUNAS pada transaksi ({$tunggakanDenda->kode_transaksi}) sebesar Rp " . number_format($tunggakanDenda->totalTagihan(), 0, ',', '.') . ". Harap selesaikan pembayaran terlebih dahulu.");
+        }
+
+        // B. Cek batas maksimal kuantitas unit per transaksi (Maksimal 10 unit total)
+        $totalKuantitas = array_sum(array_column($validated['items'], 'jumlah'));
+        if ($totalKuantitas > 10) {
+            return back()->withInput()->with('error', "Peminjaman ditolak: Total kuantitas alat yang dipinjam dalam satu transaksi maksimal 10 unit (saat ini diminta: {$totalKuantitas} unit).");
+        }
+
+        // C. Cek batas transaksi aktif per mahasiswa (Maksimal 2 transaksi aktif)
+        $jumlahTransaksiAktif = Peminjaman::where('mahasiswa_id', $validated['mahasiswa_id'])
+            ->where('status', 'dipinjam')
+            ->count();
+
+        if ($jumlahTransaksiAktif >= 2) {
+            return back()->withInput()->with('error', "Peminjaman ditolak: Mahasiswa telah memiliki 2 transaksi peminjaman aktif. Harap kembalikan alat sebelumnya sebelum meminjam kembali.");
+        }
+
         try {
             $peminjaman = DB::transaction(function () use ($validated) {
                 // Kunci dan cek ketersediaan stok semua alat terlebih dahulu (Row Locking)
@@ -120,13 +157,28 @@ class PeminjamanController extends Controller
 
                 // Buat Detail Peminjaman dan Kurangi Stok Tersedia
                 foreach ($alatModels as $item) {
+                    $units = \App\Models\AlatUnit::where('alat_id', $item['model']->id)
+                        ->where('status', 'tersedia')
+                        ->limit($item['jumlah'])
+                        ->get();
+
+                    $unitCodeList = $units->pluck('kode_unit')->implode(', ');
+
                     DetailPeminjaman::create([
                         'peminjaman_id' => $peminjaman->id,
                         'alat_id' => $item['model']->id,
                         'jumlah' => $item['jumlah'],
+                        'kode_unit_dipinjam' => $unitCodeList ?: null,
                         'kondisi_kembali' => null,
                         'biaya_perbaikan' => 0,
                     ]);
+
+                    foreach ($units as $u) {
+                        $u->update([
+                            'status' => 'dipinjam',
+                            'peminjaman_id' => $peminjaman->id,
+                        ]);
+                    }
 
                     // Kurangi stok tersedia
                     $item['model']->decrement('stok_tersedia', $item['jumlah']);
@@ -149,6 +201,15 @@ class PeminjamanController extends Controller
         return view('peminjaman.show', compact('peminjaman'));
     }
 
+    /**
+     * Tampilan cetak nota bukti transaksi peminjaman & pengembalian (struk bebas lab / bukti denda).
+     */
+    public function nota(Peminjaman $peminjaman)
+    {
+        $peminjaman->load(['mahasiswa', 'detailPeminjaman.alat']);
+        return view('peminjaman.nota', compact('peminjaman'));
+    }
+
     public function cancel(Peminjaman $peminjaman)
     {
         if ($peminjaman->status !== 'dipinjam') {
@@ -161,6 +222,13 @@ class PeminjamanController extends Controller
                 if ($peminjamanLocked->status !== 'dipinjam') {
                     throw new \Exception('Status transaksi sudah berubah.');
                 }
+
+                // Kembalikan alokasi unit fisik
+                \App\Models\AlatUnit::where('peminjaman_id', $peminjamanLocked->id)
+                    ->update([
+                        'status' => 'tersedia',
+                        'peminjaman_id' => null,
+                    ]);
 
                 // Kembalikan alokasi stok untuk semua detail alat
                 foreach ($peminjamanLocked->detailPeminjaman as $detail) {
@@ -181,5 +249,102 @@ class PeminjamanController extends Controller
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal membatalkan transaksi: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Menampilkan daftar permohonan pinjam yang menunggu persetujuan (ACC) admin.
+     */
+    public function antreanAcc(Request $request)
+    {
+        $antrean = Peminjaman::with(['mahasiswa', 'detailPeminjaman.alat'])
+            ->where('status', 'menunggu_acc')
+            ->orderBy('id', 'asc')
+            ->get();
+
+        return view('peminjaman.antrean_acc', compact('antrean'));
+    }
+
+    /**
+     * Menyetujui (ACC) permohonan peminjaman dari mahasiswa dan memotong stok alat secara atomik.
+     */
+    public function approve(Request $request, Peminjaman $peminjaman)
+    {
+        if ($peminjaman->status !== 'menunggu_acc') {
+            return back()->with('error', 'Hanya permohonan berstatus menunggu persetujuan yang dapat di-ACC.');
+        }
+
+        try {
+            DB::transaction(function () use ($peminjaman, $request) {
+                $peminjamanLocked = Peminjaman::where('id', $peminjaman->id)->lockForUpdate()->firstOrFail();
+
+                if ($peminjamanLocked->status !== 'menunggu_acc') {
+                    throw new \Exception('Status permohonan ini sudah berubah.');
+                }
+
+                // Cek ketersediaan stok fisik setiap alat dan potong stok
+                foreach ($peminjamanLocked->detailPeminjaman as $detail) {
+                    $alat = Alat::where('id', $detail->alat_id)->lockForUpdate()->firstOrFail();
+
+                    if ($alat->stok_tersedia < $detail->jumlah) {
+                        throw new \Exception("Stok alat '{$alat->nama_alat}' tidak mencukupi untuk di-ACC! Tersedia: {$alat->stok_tersedia}, Diminta: {$detail->jumlah}.");
+                    }
+
+                    // Alokasikan unit fisik berstatus 'tersedia'
+                    $units = \App\Models\AlatUnit::where('alat_id', $detail->alat_id)
+                        ->where('status', 'tersedia')
+                        ->limit($detail->jumlah)
+                        ->get();
+
+                    $unitCodeList = $units->pluck('kode_unit')->implode(', ');
+                    $detail->update(['kode_unit_dipinjam' => $unitCodeList]);
+
+                    foreach ($units as $u) {
+                        $u->update([
+                            'status' => 'dipinjam',
+                            'peminjaman_id' => $peminjamanLocked->id,
+                        ]);
+                    }
+
+                    $alat->decrement('stok_tersedia', $detail->jumlah);
+                }
+
+                // Update status transaksi menjadi aktif dipinjam
+                $peminjamanLocked->update([
+                    'status' => 'dipinjam',
+                    'approved_at' => now(),
+                    'catatan_admin' => $request->input('catatan_admin') ?: 'Disetujui oleh Petugas Laboratorium.',
+                ]);
+            });
+
+            return redirect()->route('peminjaman.antrean_acc')
+                ->with('success', "Permohonan [{$peminjaman->kode_transaksi}] berhasil DISETUJUI (ACC). Stok alat telah dialokasikan.");
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal menyetujui permohonan: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Menolak permohonan peminjaman dari mahasiswa.
+     */
+    public function reject(Request $request, Peminjaman $peminjaman)
+    {
+        if ($peminjaman->status !== 'menunggu_acc') {
+            return back()->with('error', 'Hanya permohonan berstatus menunggu persetujuan yang dapat ditolak.');
+        }
+
+        $request->validate([
+            'catatan_admin' => ['required', 'string', 'max:255'],
+        ], [
+            'catatan_admin.required' => 'Alasan penolakan wajib diisi agar mahasiswa mengetahuinya.',
+        ]);
+
+        $peminjaman->update([
+            'status' => 'ditolak',
+            'catatan_admin' => $request->input('catatan_admin'),
+        ]);
+
+        return redirect()->route('peminjaman.antrean_acc')
+            ->with('info', "Permohonan [{$peminjaman->kode_transaksi}] telah DITOLAK. Alasan tercatat untuk mahasiswa.");
     }
 }

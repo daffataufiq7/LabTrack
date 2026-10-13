@@ -168,4 +168,50 @@ class PeminjamanTest extends TestCase
         $this->assertEquals('dibatalkan', $peminjaman->fresh()->status);
         $this->assertEquals(5, $this->alat1->fresh()->stok_tersedia);
     }
+
+    public function test_fails_when_student_has_overdue_active_loan(): void
+    {
+        // Buat peminjaman aktif yang sudah lewat tanggal jatuh tempo (terlambat)
+        Peminjaman::create([
+            'kode_transaksi' => 'TRX-PAST-OVERDUE',
+            'mahasiswa_id' => $this->mhs->id,
+            'tanggal_pinjam' => Carbon::today()->subDays(10)->toDateString(),
+            'tanggal_jatuh_tempo' => Carbon::today()->subDays(3)->toDateString(),
+            'status' => 'dipinjam',
+            'total_denda' => 0,
+            'total_biaya_perbaikan' => 0,
+        ]);
+
+        // Coba pinjam alat baru dengan mahasiswa yang sama
+        $payload = [
+            'mahasiswa_id' => $this->mhs->id,
+            'tanggal_pinjam' => Carbon::today()->toDateString(),
+            'tanggal_jatuh_tempo' => Carbon::today()->addDays(5)->toDateString(),
+            'items' => [
+                ['alat_id' => $this->alat1->id, 'jumlah' => 1],
+            ],
+        ];
+
+        $response = $this->post(route('peminjaman.store'), $payload);
+        $response->assertSessionHas('error');
+        $this->assertStringContainsString('melewati jatuh tempo', session('error'));
+    }
+
+    public function test_fails_when_total_quantity_exceeds_quota(): void
+    {
+        // Coba pinjam total lebih dari kuota 10 unit
+        $payload = [
+            'mahasiswa_id' => $this->mhs->id,
+            'tanggal_pinjam' => Carbon::today()->toDateString(),
+            'tanggal_jatuh_tempo' => Carbon::today()->addDays(5)->toDateString(),
+            'items' => [
+                ['alat_id' => $this->alat1->id, 'jumlah' => 5],
+                ['alat_id' => $this->alat2->id, 'jumlah' => 6], // Total 11 unit (maksimal 10)
+            ],
+        ];
+
+        $response = $this->post(route('peminjaman.store'), $payload);
+        $response->assertSessionHas('error');
+        $this->assertStringContainsString('maksimal 10 unit', session('error'));
+    }
 }

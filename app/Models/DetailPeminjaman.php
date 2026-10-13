@@ -16,6 +16,7 @@ class DetailPeminjaman extends Model
         'peminjaman_id',
         'alat_id',
         'jumlah',
+        'kode_unit_dipinjam',
         'kondisi_kembali',
         'biaya_perbaikan',
     ];
@@ -24,6 +25,17 @@ class DetailPeminjaman extends Model
         'jumlah' => 'integer',
         'biaya_perbaikan' => 'decimal:2',
     ];
+
+    /**
+     * Mengambil daftar kode unit sebagai array.
+     */
+    public function getUnitListAttribute(): array
+    {
+        if (empty($this->kode_unit_dipinjam)) {
+            return [];
+        }
+        return array_map('trim', explode(',', $this->kode_unit_dipinjam));
+    }
 
     public function peminjaman(): BelongsTo
     {

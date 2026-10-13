@@ -52,9 +52,14 @@
                         <span class="badge bg-secondary badge-status">Dibatalkan</span>
                     @endif
                 </div>
-                <a href="{{ route('peminjaman.index') }}" class="btn btn-sm btn-outline-secondary">
-                    <i class="bi bi-arrow-left me-1"></i> Kembali
-                </a>
+                <div class="d-flex align-items-center gap-2">
+                    <a href="{{ route('peminjaman.nota', $peminjaman->id) }}" target="_blank" class="btn btn-sm btn-outline-primary shadow-sm">
+                        <i class="bi bi-printer me-1"></i> Cetak Struk / Nota
+                    </a>
+                    <a href="{{ route('peminjaman.index') }}" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i> Kembali
+                    </a>
+                </div>
             </div>
             <div class="card-body p-4">
                 <div class="row g-3">
@@ -114,7 +119,19 @@
                                     <td class="text-muted">{{ $idx + 1 }}</td>
                                     <td>
                                         <div class="fw-semibold text-dark">{{ $detail->alat->nama_alat }}</div>
-                                        <small class="text-muted font-monospace">{{ $detail->alat->kode_alat }}</small>
+                                        <div class="small text-muted font-monospace">{{ $detail->alat->kode_alat }}</div>
+                                        @if($detail->kode_unit_dipinjam)
+                                            <div class="mt-1 d-flex flex-wrap gap-1 align-items-center">
+                                                <span class="badge bg-light text-secondary border font-monospace" style="font-size: 0.7rem;">
+                                                    <i class="bi bi-upc-scan text-primary me-1"></i>Unit Fisik:
+                                                </span>
+                                                @foreach($detail->unit_list as $unitCode)
+                                                    <span class="badge bg-primary-subtle text-primary border border-primary font-monospace" style="font-size: 0.72rem;">
+                                                        {{ $unitCode }}
+                                                    </span>
+                                                @endforeach
+                                            </div>
+                                        @endif
                                     </td>
                                     <td>
                                         <span class="badge bg-secondary-subtle text-secondary border px-2 py-1">
@@ -210,13 +227,83 @@
                         </span>
                     </li>
                 </ul>
-                <div class="p-3 bg-light rounded-3 d-flex justify-content-between align-items-center border">
+                <div class="p-3 bg-light rounded-3 d-flex justify-content-between align-items-center border mb-3">
                     <strong class="text-dark">Total Biaya:</strong>
-                    <h5 class="fw-bold mb-0 {{ ($peminjaman->total_denda + $peminjaman->total_biaya_perbaikan) > 0 ? 'text-danger' : 'text-success' }}">
-                        Rp {{ number_format($peminjaman->total_denda + $peminjaman->total_biaya_perbaikan, 0, ',', '.') }}
+                    <h5 class="fw-bold mb-0 {{ $peminjaman->totalTagihan() > 0 ? 'text-danger' : 'text-success' }}">
+                        Rp {{ number_format($peminjaman->totalTagihan(), 0, ',', '.') }}
                     </h5>
                 </div>
+
+                @if($peminjaman->status === 'dikembalikan')
+                    <div class="p-3 rounded-3 border {{ $peminjaman->isLunas() ? 'bg-success-subtle border-success' : 'bg-danger-subtle border-danger' }}">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="small text-muted fw-semibold">Status Pembayaran:</span>
+                            @if($peminjaman->isLunas())
+                                <span class="badge bg-success"><i class="bi bi-check-circle-fill me-1"></i> LUNAS</span>
+                            @else
+                                <span class="badge bg-danger"><i class="bi bi-exclamation-octagon-fill me-1"></i> BELUM LUNAS</span>
+                            @endif
+                        </div>
+                        @if($peminjaman->isLunas())
+                            <small class="text-success-emphasis d-block" style="font-size: 0.75rem;">
+                                Metode: <strong>{{ $peminjaman->metode_pembayaran ?: 'Tunai di Lab' }}</strong>
+                                @if($peminjaman->waktu_pembayaran)
+                                    &bull; {{ $peminjaman->waktu_pembayaran->format('d/m/Y H:i') }} WIB
+                                @endif
+                            </small>
+                        @else
+                            <small class="text-danger-emphasis d-block mb-2" style="font-size: 0.75rem;">
+                                Mahasiswa belum melunasi denda/kerusakan sebesar <strong>Rp {{ number_format($peminjaman->totalTagihan(), 0, ',', '.') }}</strong>. Mahasiswa diblokir dari peminjaman baru sampai tagihan ini lunas.
+                            </small>
+                            <button type="button" class="btn btn-sm btn-success w-100 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalPelunasan">
+                                <i class="bi bi-cash-coin me-1"></i> Konfirmasi Pelunasan Denda
+                            </button>
+                        @endif
+                    </div>
+                @endif
             </div>
+
+            @if($peminjaman->status === 'dikembalikan' && $peminjaman->isBelumLunas())
+                <!-- Modal Pelunasan Denda -->
+                <div class="modal fade text-start" id="modalPelunasan" tabindex="-1" aria-labelledby="modalPelunasanLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content border-0 shadow">
+                            <form action="{{ route('pengembalian.bayar', $peminjaman->id) }}" method="POST">
+                                @csrf
+                                <div class="modal-header bg-success text-white">
+                                    <h5 class="modal-title fs-6 fw-bold" id="modalPelunasanLabel">
+                                        <i class="bi bi-cash-stack me-2"></i>Konfirmasi Pelunasan Denda / Kerusakan
+                                    </h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body py-4">
+                                    <p class="mb-2">Konfirmasi penerimaan pembayaran tagihan untuk transaksi ini:</p>
+                                    <div class="p-3 bg-light rounded-3 border mb-3">
+                                        <strong>{{ $peminjaman->kode_transaksi }}</strong> &bull; {{ $peminjaman->mahasiswa->nama }}<br>
+                                        <span class="text-muted small">Total yang harus dibayar:</span>
+                                        <h5 class="fw-bold text-danger mb-0 mt-1">Rp {{ number_format($peminjaman->totalTagihan(), 0, ',', '.') }}</h5>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="metode_pembayaran_modal" class="form-label small fw-semibold">Pilih Kanal Pembayaran <span class="text-danger">*</span></label>
+                                        <select name="metode_pembayaran" id="metode_pembayaran_modal" class="form-select" required>
+                                            <option value="Tunai (Cash Meja Lab)">Tunai (Cash di Meja Lab)</option>
+                                            <option value="QRIS Kas Laboratorium">QRIS Kas Laboratorium Terpadu</option>
+                                            <option value="Transfer Bank Kas Lab">Transfer Bank (Rekening Kas Lab)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="modal-footer bg-light">
+                                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                                    <button type="submit" class="btn btn-sm btn-success">
+                                        <i class="bi bi-check-lg me-1"></i> Simpan Sebagai LUNAS
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             @if($peminjaman->status === 'dipinjam')
                 <div class="card-footer bg-white border-top p-3 d-flex flex-column gap-2">
                     <a href="{{ route('pengembalian.form', $peminjaman->id) }}" class="btn btn-primary w-100 shadow-sm">

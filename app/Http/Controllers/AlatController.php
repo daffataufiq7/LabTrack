@@ -14,7 +14,7 @@ class AlatController extends Controller
         $kategoriFilter = $request->input('kategori');
         $kondisiFilter = $request->input('kondisi');
 
-        $query = Alat::withCount('detailPeminjaman');
+        $query = Alat::with('units')->withCount('detailPeminjaman');
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -54,6 +54,7 @@ class AlatController extends Controller
             'kategori' => ['required', 'string', 'max:100'],
             'stok_total' => ['required', 'integer', 'min:0'],
             'stok_tersedia' => ['required', 'integer', 'min:0', 'lte:stok_total'],
+            'stok_rusak' => ['nullable', 'integer', 'min:0'],
             'kondisi' => ['required', 'string', 'max:50'],
         ], [
             'kode_alat.required' => 'Kode alat wajib diisi.',
@@ -67,6 +68,7 @@ class AlatController extends Controller
             'kondisi.required' => 'Kondisi fisik alat wajib diisi.',
         ]);
 
+        $validated['stok_rusak'] = $validated['stok_rusak'] ?? 0;
         Alat::create($validated);
 
         return redirect()->route('alat.index')
@@ -87,6 +89,7 @@ class AlatController extends Controller
             'kategori' => ['required', 'string', 'max:100'],
             'stok_total' => ['required', 'integer', 'min:0'],
             'stok_tersedia' => ['required', 'integer', 'min:0', 'lte:stok_total'],
+            'stok_rusak' => ['nullable', 'integer', 'min:0'],
             'kondisi' => ['required', 'string', 'max:50'],
         ], [
             'kode_alat.required' => 'Kode alat wajib diisi.',
@@ -100,6 +103,7 @@ class AlatController extends Controller
             'kondisi.required' => 'Kondisi alat wajib diisi.',
         ]);
 
+        $validated['stok_rusak'] = $validated['stok_rusak'] ?? 0;
         $alat->update($validated);
 
         return redirect()->route('alat.index')

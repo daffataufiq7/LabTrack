@@ -160,8 +160,9 @@ class PengembalianTest extends TestCase
         $this->assertStringContainsString('1 Baik, 1 Rusak', $detailRefreshed->kondisi_kembali);
 
         // Verifikasi stok: Hanya 1 unit layak yang dipulihkan!
-        // 8 + 1 = 9 unit (bukan 10)
+        // 8 + 1 = 9 unit (bukan 10), dan 1 unit tercatat di stok_rusak
         $this->assertEquals(9, $this->alat->fresh()->stok_tersedia);
+        $this->assertEquals(1, $this->alat->fresh()->stok_rusak);
     }
 
     public function test_fails_when_return_date_is_before_borrow_date(): void
@@ -216,5 +217,97 @@ class PengembalianTest extends TestCase
 
         // Pastikan stok tidak bertambah lagi (mencegah overflow stok)
         $this->assertEquals(10, $this->alat->fresh()->stok_tersedia);
+    }
+
+    public function test_pengembalian_dengan_denda_dapat_disimpan_belum_lunas_dan_memblokir_peminjaman_baru(): void
+    {
+        $tglPinjam = '2026-09-28';
+        $tglTempo = '2026-10-05';
+        $tglKembali = '2026-10-10'; // Terlambat 5 hari -> denda Rp4.000
+
+        $peminjaman = $this->createLoan($tglPinjam, $tglTempo, 1);
+        $detail = $peminjaman->detailPeminjaman->first();
+
+        $payload = [
+            'tanggal_kembali' => $tglKembali,
+            'status_pembayaran' => 'belum_lunas',
+            'detail' => [
+                $detail->id => [
+                    'jumlah_rusak' => 0,
+                    'kondisi_catatan' => 'Kembali lengkap tapi belum bawa uang denda',
+                ],
+            ],
+        ];
+
+        $response = $this->post(route('pengembalian.process', $peminjaman->id), $payload);
+        $response->assertSessionHas('success');
+
+        $peminjamanRefreshed = $peminjaman->fresh();
+        $this->assertEquals('dikembalikan', $peminjamanRefreshed->status);
+        $this->assertEquals('belum_lunas', $peminjamanRefreshed->status_pembayaran);
+        $this->assertEquals(4000, (float) $peminjamanRefreshed->total_denda);
+
+        // Percobaan meminjam lagi saat masih menunggak denda -> HARUS DITOLAK
+        $pinjamBaruPayload = [
+            'mahasiswa_id' => $this->mhs->id,
+            'tanggal_pinjam' => '2026-10-14',
+            'tanggal_jatuh_tempo' => '2026-10-21',
+            'items' => [
+                ['alat_id' => $this->alat->id, 'jumlah' => 1],
+            ],
+        ];
+
+        $pinjamResponse = $this->post(route('peminjaman.store'), $pinjamBaruPayload);
+        $pinjamResponse->assertSessionHas('error');
+        $this->assertStringContainsString('BELUM LUNAS', session('error'));
+    }
+
+    public function test_admin_dapat_mengonfirmasi_pelunasan_denda_dan_membuka_blokir(): void
+    {
+        $tglPinjam = '2026-09-28';
+        $tglTempo = '2026-10-05';
+        $tglKembali = '2026-10-10';
+
+        $peminjaman = $this->createLoan($tglPinjam, $tglTempo, 1);
+        $detail = $peminjaman->detailPeminjaman->first();
+
+        // 1. Pengembalian dengan status belum lunas
+        $this->post(route('pengembalian.process', $peminjaman->id), [
+            'tanggal_kembali' => $tglKembali,
+            'status_pembayaran' => 'belum_lunas',
+            'detail' => [
+                $detail->id => ['jumlah_rusak' => 0],
+            ],
+        ]);
+
+        $this->assertEquals('belum_lunas', $peminjaman->fresh()->status_pembayaran);
+
+        // 2. Admin konfirmasi pelunasan kasir lab
+        $bayarResponse = $this->from(route('peminjaman.show', $peminjaman->id))
+            ->post(route('pengembalian.bayar', $peminjaman->id), [
+                'metode_pembayaran' => 'QRIS Laboratorium',
+                'catatan' => 'Dibayar via QRIS Dinamis Kasir Lab',
+            ]);
+
+        $bayarResponse->assertRedirect(route('peminjaman.show', $peminjaman->id));
+        $bayarResponse->assertSessionHas('success');
+
+        $peminjamanLunas = $peminjaman->fresh();
+        $this->assertEquals('lunas', $peminjamanLunas->status_pembayaran);
+        $this->assertEquals('QRIS Laboratorium', $peminjamanLunas->metode_pembayaran);
+        $this->assertNotNull($peminjamanLunas->waktu_pembayaran);
+
+        // 3. Mahasiswa sekarang sudah bisa meminjam lagi tanpa diblokir
+        $pinjamBaruPayload = [
+            'mahasiswa_id' => $this->mhs->id,
+            'tanggal_pinjam' => '2026-10-14',
+            'tanggal_jatuh_tempo' => '2026-10-21',
+            'items' => [
+                ['alat_id' => $this->alat->id, 'jumlah' => 1],
+            ],
+        ];
+
+        $pinjamResponse = $this->post(route('peminjaman.store'), $pinjamBaruPayload);
+        $pinjamResponse->assertSessionHas('success');
     }
 }

@@ -146,6 +146,9 @@
                                     <a href="{{ route('peminjaman.show', $trx->id) }}" class="btn btn-outline-secondary" title="Lihat Detail Transaksi">
                                         <i class="bi bi-eye"></i>
                                     </a>
+                                    <a href="{{ route('peminjaman.nota', $trx->id) }}" target="_blank" class="btn btn-outline-info" title="Cetak Struk / Nota Transaksi">
+                                        <i class="bi bi-printer"></i>
+                                    </a>
                                     @if($trx->status === 'dipinjam')
                                         <a href="{{ route('pengembalian.form', $trx->id) }}" class="btn btn-outline-primary" title="Proses Pengembalian">
                                             <i class="bi bi-box-arrow-in-down-left"></i>

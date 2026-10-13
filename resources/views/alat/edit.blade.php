@@ -55,7 +55,7 @@
                         </div>
 
                         <!-- Stok Total -->
-                        <div class="col-12 col-md-4">
+                        <div class="col-12 col-md-3">
                             <label for="stok_total" class="form-label">Stok Total Unit <span class="text-danger">*</span></label>
                             <input type="number" name="stok_total" id="stok_total" class="form-control @error('stok_total') is-invalid @enderror" min="0" value="{{ old('stok_total', $alat->stok_total) }}" required>
                             @error('stok_total')
@@ -64,7 +64,7 @@
                         </div>
 
                         <!-- Stok Tersedia -->
-                        <div class="col-12 col-md-4">
+                        <div class="col-12 col-md-3">
                             <label for="stok_tersedia" class="form-label">Stok Tersedia (Ready) <span class="text-danger">*</span></label>
                             <input type="number" name="stok_tersedia" id="stok_tersedia" class="form-control @error('stok_tersedia') is-invalid @enderror" min="0" value="{{ old('stok_tersedia', $alat->stok_tersedia) }}" required>
                             @error('stok_tersedia')
@@ -72,8 +72,17 @@
                             @enderror
                         </div>
 
+                        <!-- Stok Rusak (Dalam Perbaikan) -->
+                        <div class="col-12 col-md-3">
+                            <label for="stok_rusak" class="form-label">Stok Rusak (Perbaikan)</label>
+                            <input type="number" name="stok_rusak" id="stok_rusak" class="form-control @error('stok_rusak') is-invalid @enderror" min="0" value="{{ old('stok_rusak', $alat->stok_rusak ?? 0) }}">
+                            @error('stok_rusak')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
                         <!-- Kondisi Fisik -->
-                        <div class="col-12 col-md-4">
+                        <div class="col-12 col-md-3">
                             <label for="kondisi" class="form-label">Kondisi Fisik Alat <span class="text-danger">*</span></label>
                             <select name="kondisi" id="kondisi" class="form-select @error('kondisi') is-invalid @enderror" required>
                                 <option value="Baik" {{ old('kondisi', $alat->kondisi) == 'Baik' ? 'selected' : '' }}>Baik (Siap Pakai)</option>

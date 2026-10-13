@@ -6,9 +6,11 @@ use App\Models\Alat;
 use App\Models\DetailPeminjaman;
 use App\Models\Mahasiswa;
 use App\Models\Peminjaman;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -139,12 +141,16 @@ class DatabaseSeeder extends Seeder
             'status' => 'dikembalikan',
             'total_denda' => 0,
             'total_biaya_perbaikan' => 0,
+            'status_pembayaran' => 'lunas',
+            'metode_pembayaran' => 'Tidak Ada Biaya (Bebas Tanggungan)',
+            'waktu_pembayaran' => $tglKembali1,
         ]);
 
         DetailPeminjaman::create([
             'peminjaman_id' => $trx1->id,
             'alat_id' => $alatMap['ALT-ELK-002']->id,
             'jumlah' => 2,
+            'kode_unit_dipinjam' => 'ALT-ELK-002-U01, ALT-ELK-002-U02',
             'kondisi_kembali' => 'Baik',
             'biaya_perbaikan' => 0,
         ]);
@@ -167,17 +173,27 @@ class DatabaseSeeder extends Seeder
             'status' => 'dikembalikan',
             'total_denda' => 4000,
             'total_biaya_perbaikan' => 10000,
+            'status_pembayaran' => 'lunas',
+            'metode_pembayaran' => 'Tunai (Cash Lab)',
+            'waktu_pembayaran' => $tglKembali2,
         ]);
 
         DetailPeminjaman::create([
             'peminjaman_id' => $trx2->id,
             'alat_id' => $alatMap['ALT-IOT-001']->id,
             'jumlah' => 2,
+            'kode_unit_dipinjam' => 'ALT-IOT-001-U01, ALT-IOT-001-U02',
             'kondisi_kembali' => '1 Rusak, 1 Baik',
             'biaya_perbaikan' => 10000,
         ]);
-        // Potong stok tersedia untuk unit yang rusak (tidak dipulihkan):
+        // Potong stok tersedia untuk unit yang rusak (tidak dipulihkan) dan catat ke stok_rusak:
         $alatMap['ALT-IOT-001']->decrement('stok_tersedia', 1);
+        $alatMap['ALT-IOT-001']->increment('stok_rusak', 1);
+        \App\Models\AlatUnit::where('kode_unit', 'ALT-IOT-001-U01')->update([
+            'status' => 'rusak',
+            'kondisi' => 'Rusak (Port USB Board Longgar & Short)',
+            'catatan' => 'Tercatat rusak pada pengembalian ' . $trx2->kode_transaksi,
+        ]);
 
         // Transaksi 3: Sedang Aktif Dipinjam - Belum Jatuh Tempo (Budi Santoso)
         // Pinjam 2 hari lalu, jatuh tempo 5 hari ke depan
@@ -199,16 +215,28 @@ class DatabaseSeeder extends Seeder
             'peminjaman_id' => $trx3->id,
             'alat_id' => $alatMap['ALT-ELK-001']->id,
             'jumlah' => 1,
+            'kode_unit_dipinjam' => 'ALT-ELK-001-U01',
             'kondisi_kembali' => null,
             'biaya_perbaikan' => 0,
         ]);
+        \App\Models\AlatUnit::where('kode_unit', 'ALT-ELK-001-U01')->update([
+            'status' => 'dipinjam',
+            'peminjaman_id' => $trx3->id,
+        ]);
+
         DetailPeminjaman::create([
             'peminjaman_id' => $trx3->id,
             'alat_id' => $alatMap['ALT-PRK-001']->id,
             'jumlah' => 2,
+            'kode_unit_dipinjam' => 'ALT-PRK-001-U01, ALT-PRK-001-U02',
             'kondisi_kembali' => null,
             'biaya_perbaikan' => 0,
         ]);
+        \App\Models\AlatUnit::whereIn('kode_unit', ['ALT-PRK-001-U01', 'ALT-PRK-001-U02'])->update([
+            'status' => 'dipinjam',
+            'peminjaman_id' => $trx3->id,
+        ]);
+
         // Kurangi stok tersedia alat yang sedang dipinjam:
         $alatMap['ALT-ELK-001']->decrement('stok_tersedia', 1);
         $alatMap['ALT-PRK-001']->decrement('stok_tersedia', 2);
@@ -233,9 +261,71 @@ class DatabaseSeeder extends Seeder
             'peminjaman_id' => $trx4->id,
             'alat_id' => $alatMap['ALT-IOT-002']->id,
             'jumlah' => 2,
+            'kode_unit_dipinjam' => 'ALT-IOT-002-U01, ALT-IOT-002-U02',
             'kondisi_kembali' => null,
             'biaya_perbaikan' => 0,
         ]);
+        \App\Models\AlatUnit::whereIn('kode_unit', ['ALT-IOT-002-U01', 'ALT-IOT-002-U02'])->update([
+            'status' => 'dipinjam',
+            'peminjaman_id' => $trx4->id,
+        ]);
+
         $alatMap['ALT-IOT-002']->decrement('stok_tersedia', 2);
+
+        // Transaksi 5: Pengajuan Baru Menunggu ACC Admin (Ahmad Fajar Pratama - User 1)
+        // Mahasiswa mengajukan pinjam 1 unit Mikroskop hari ini, tempo 7 hari ke depan.
+        // Stok TIDAK dipotong sebelum di-ACC oleh Admin.
+        $tglPinjam5 = Carbon::today();
+        $tglTempo5 = Carbon::today()->addDays(7);
+
+        $trx5 = Peminjaman::create([
+            'kode_transaksi' => 'TRX-' . $tglPinjam5->format('Ymd') . '-0005',
+            'mahasiswa_id' => $mahasiswaModels[0]->id,
+            'tanggal_pinjam' => $tglPinjam5->toDateString(),
+            'tanggal_jatuh_tempo' => $tglTempo5->toDateString(),
+            'tanggal_kembali' => null,
+            'status' => 'menunggu_acc',
+            'total_denda' => 0,
+            'total_biaya_perbaikan' => 0,
+        ]);
+
+        DetailPeminjaman::create([
+            'peminjaman_id' => $trx5->id,
+            'alat_id' => $alatMap['ALT-OPT-001']->id,
+            'jumlah' => 1,
+            'kondisi_kembali' => null,
+            'biaya_perbaikan' => 0,
+        ]);
+
+        // 4. Data Akun Pengguna (Users Login)
+        // Admin: Username '2', Password '2'
+        User::create([
+            'name' => 'Petugas Laboratorium',
+            'username' => '2',
+            'email' => 'admin@labtrack.ac.id',
+            'password' => Hash::make('2'),
+            'role' => 'admin',
+            'mahasiswa_id' => null,
+        ]);
+
+        // Mahasiswa: Username '1', Password '1' (Terhubung ke Ahmad Fajar Pratama)
+        User::create([
+            'name' => 'Ahmad Fajar Pratama',
+            'username' => '1',
+            'email' => 'ahmad@student.uny.ac.id',
+            'password' => Hash::make('1'),
+            'role' => 'mahasiswa',
+            'mahasiswa_id' => $mahasiswaModels[0]->id,
+        ]);
+
+        // Akun Mahasiswa 2 (Siti Nur Aisyah)
+        User::create([
+            'name' => 'Siti Nur Aisyah',
+            'username' => '22051204015',
+            'email' => 'siti@student.uny.ac.id',
+            'password' => Hash::make('123456'),
+            'role' => 'mahasiswa',
+            'mahasiswa_id' => $mahasiswaModels[1]->id,
+        ]);
     }
 }

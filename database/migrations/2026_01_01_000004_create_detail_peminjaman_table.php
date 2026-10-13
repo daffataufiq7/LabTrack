@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('peminjaman_id')->constrained('peminjaman')->onDelete('cascade');
             $table->foreignId('alat_id')->constrained('alat')->onDelete('restrict');
             $table->unsignedInteger('jumlah');
+            $table->text('kode_unit_dipinjam')->nullable();
             $table->string('kondisi_kembali', 50)->nullable();
             $table->decimal('biaya_perbaikan', 12, 2)->default(0);
             $table->timestamps();

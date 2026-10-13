@@ -95,6 +95,11 @@
                                         @else
                                             Tersedia {{ $item->stok_tersedia }}
                                         @endif
+                                        @if($item->stok_rusak > 0)
+                                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle ms-1" title="Unit Rusak (Perlu Perbaikan)">
+                                                <i class="bi bi-wrench"></i> {{ $item->stok_rusak }} Rusak
+                                            </span>
+                                        @endif
                                     </small>
                                 </div>
                             </td>
@@ -124,12 +129,97 @@
                             </td>
                             <td class="text-end">
                                 <div class="btn-group btn-group-sm">
+                                    <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#unitAlatModal{{ $item->id }}" title="Daftar Unit Fisik & Serial Number">
+                                        <i class="bi bi-upc-scan me-1"></i> Unit
+                                    </button>
                                     <a href="{{ route('alat.edit', $item->id) }}" class="btn btn-outline-secondary" title="Edit Alat">
                                         <i class="bi bi-pencil-square"></i>
                                     </a>
                                     <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteAlatModal{{ $item->id }}" title="Hapus Alat">
                                         <i class="bi bi-trash"></i>
                                     </button>
+                                </div>
+
+                                <!-- Modal Daftar Unit Fisik Alat -->
+                                <div class="modal fade text-start" id="unitAlatModal{{ $item->id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                                        <div class="modal-content border-0 shadow">
+                                            <div class="modal-header bg-primary text-white">
+                                                <div>
+                                                    <h5 class="modal-title fs-6 fw-bold mb-0">
+                                                        <i class="bi bi-upc-scan me-2"></i>Daftar Unit Fisik (Serial Number): {{ $item->nama_alat }}
+                                                    </h5>
+                                                    <small class="text-white-50 font-monospace">Kode Induk: {{ $item->kode_alat }} &bull; Total: {{ $item->stok_total }} Unit</small>
+                                                </div>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body p-3">
+                                                <div class="d-flex gap-2 mb-3">
+                                                    <span class="badge bg-success-subtle text-success border border-success px-3 py-2">
+                                                        <i class="bi bi-check-circle me-1"></i>{{ $item->units->where('status', 'tersedia')->count() }} Ready
+                                                    </span>
+                                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning px-3 py-2">
+                                                        <i class="bi bi-person-walking me-1"></i>{{ $item->units->where('status', 'dipinjam')->count() }} Dipinjam
+                                                    </span>
+                                                    <span class="badge bg-danger-subtle text-danger border border-danger px-3 py-2">
+                                                        <i class="bi bi-exclamation-triangle me-1"></i>{{ $item->units->where('status', 'rusak')->count() }} Rusak/Karantina
+                                                    </span>
+                                                </div>
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm table-bordered align-middle mb-0">
+                                                        <thead class="table-light">
+                                                            <tr>
+                                                                <th style="width: 40px;" class="text-center">No</th>
+                                                                <th>Kode Unit Fisik</th>
+                                                                <th>Nomor Seri / Barcode</th>
+                                                                <th class="text-center" style="width: 120px;">Status Unit</th>
+                                                                <th>Kondisi & Catatan</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @forelse($item->units as $uIdx => $u)
+                                                                <tr>
+                                                                    <td class="text-center text-muted">{{ $uIdx + 1 }}</td>
+                                                                    <td>
+                                                                        <span class="badge bg-light text-dark font-monospace border px-2 py-1">
+                                                                            {{ $u->kode_unit }}
+                                                                        </span>
+                                                                    </td>
+                                                                    <td class="font-monospace small text-muted">
+                                                                        {{ $u->nomor_seri ?: '-' }}
+                                                                    </td>
+                                                                    <td class="text-center">
+                                                                        @if($u->status === 'tersedia')
+                                                                            <span class="badge bg-success-subtle text-success border border-success">Tersedia</span>
+                                                                        @elseif($u->status === 'dipinjam')
+                                                                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning">Dipinjam</span>
+                                                                        @elseif($u->status === 'rusak')
+                                                                            <span class="badge bg-danger-subtle text-danger border border-danger">Rusak</span>
+                                                                        @else
+                                                                            <span class="badge bg-secondary">{{ $u->status }}</span>
+                                                                        @endif
+                                                                    </td>
+                                                                    <td class="small">
+                                                                        <div class="fw-semibold">{{ $u->kondisi }}</div>
+                                                                        @if($u->catatan)
+                                                                            <div class="text-danger" style="font-size: 0.72rem;">{{ $u->catatan }}</div>
+                                                                        @endif
+                                                                    </td>
+                                                                </tr>
+                                                            @empty
+                                                                <tr>
+                                                                    <td colspan="5" class="text-center text-muted py-3">Belum ada unit yang terdaftar.</td>
+                                                                </tr>
+                                                            @endforelse
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer bg-light">
+                                                <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <!-- Modal Konfirmasi Hapus Alat -->

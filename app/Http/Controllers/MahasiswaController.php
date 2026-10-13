@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Mahasiswa;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 
 class MahasiswaController extends Controller
@@ -54,10 +57,23 @@ class MahasiswaController extends Controller
             'program_studi.required' => 'Program studi wajib diisi.',
         ]);
 
-        Mahasiswa::create($validated);
+        DB::transaction(function () use ($validated) {
+            $mhs = Mahasiswa::create($validated);
+
+            // Integrasi otomatis akun pengguna: User login langsung dibuat dengan username & password = NIM
+            User::firstOrCreate(
+                ['username' => $mhs->nim],
+                [
+                    'name' => $mhs->nama,
+                    'password' => Hash::make($mhs->nim),
+                    'role' => 'mahasiswa',
+                    'mahasiswa_id' => $mhs->id,
+                ]
+            );
+        });
 
         return redirect()->route('mahasiswa.index')
-            ->with('success', 'Data mahasiswa berhasil ditambahkan.');
+            ->with('success', 'Data mahasiswa berhasil ditambahkan dan akun login otomatis dibuat (Username & Password: NIM).');
     }
 
     public function edit(Mahasiswa $mahasiswa)
@@ -79,7 +95,14 @@ class MahasiswaController extends Controller
             'program_studi.required' => 'Program studi wajib diisi.',
         ]);
 
-        $mahasiswa->update($validated);
+        DB::transaction(function () use ($validated, $mahasiswa) {
+            $mahasiswa->update($validated);
+
+            // Sinkronkan nama dan username akun pengguna jika terhubung
+            User::where('mahasiswa_id', $mahasiswa->id)->update([
+                'name' => $validated['nama'],
+            ]);
+        });
 
         return redirect()->route('mahasiswa.index')
             ->with('success', 'Data mahasiswa berhasil diperbarui.');
@@ -93,9 +116,13 @@ class MahasiswaController extends Controller
                 ->with('error', "Mahasiswa '{$mahasiswa->nama}' tidak dapat dihapus karena memiliki riwayat transaksi peminjaman alat laboratorium.");
         }
 
-        $mahasiswa->delete();
+        DB::transaction(function () use ($mahasiswa) {
+            // Hapus juga akun user yang terafiliasi
+            User::where('mahasiswa_id', $mahasiswa->id)->delete();
+            $mahasiswa->delete();
+        });
 
         return redirect()->route('mahasiswa.index')
-            ->with('success', 'Data mahasiswa berhasil dihapus.');
+            ->with('success', 'Data mahasiswa dan akun login berhasil dihapus.');
     }
 }
