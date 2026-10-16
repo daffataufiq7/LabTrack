@@ -35,19 +35,58 @@
             </div>
         @endif
 
-        <!-- Card Header Transaksi -->
+        <!-- Peringatan Menunggu ACC -->
+        @if($peminjaman->status === 'menunggu_acc')
+            <div class="alert alert-warning d-flex align-items-center justify-content-between p-3 rounded-4 shadow-sm mb-4 border-warning border-opacity-50" role="alert">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="icon-box bg-warning bg-opacity-20 text-warning-emphasis rounded-circle p-2">
+                        <i class="bi bi-clock-history fs-3"></i>
+                    </div>
+                    <div>
+                        <h6 class="alert-heading mb-1 fw-bold text-dark">Permohonan Ini Sedang Menunggu Verifikasi (ACC) Anda</h6>
+                        <p class="mb-0 small text-muted">
+                            Mahasiswa telah mengajukan peminjaman. Silakan setujui (ACC) untuk memotong stok fisik dan alokasi nomor unit, atau tolak permohonan.
+                        </p>
+                    </div>
+                </div>
+                <div class="d-flex gap-2 text-nowrap">
+                    <button type="button" class="btn btn-sm btn-success shadow-sm px-3" data-bs-toggle="modal" data-bs-target="#modalAccDetail">
+                        <i class="bi bi-check-lg me-1"></i> ACC
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-danger shadow-sm px-3" data-bs-toggle="modal" data-bs-target="#modalRejectDetail">
+                        <i class="bi bi-x-lg me-1"></i> Tolak
+                    </button>
+                </div>
+            </div>
+        @endif
+
+        @if($peminjaman->status === 'ditolak')
+            <div class="alert alert-danger p-3 rounded-4 shadow-sm mb-4 border-danger border-opacity-50" role="alert">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <i class="bi bi-x-circle-fill text-danger fs-5"></i>
+                    <h6 class="alert-heading mb-0 fw-bold text-danger">Permohonan Peminjaman Ditolak</h6>
+                </div>
+                <p class="mb-0 small text-danger-emphasis">
+                    Alasan Penolakan: <em>"{{ $peminjaman->catatan_admin ?: 'Tidak memenuhi syarat peminjaman.' }}"</em>
+                </p>
+            </div>
+        @endif
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
                 <div class="d-flex align-items-center gap-2">
                     <span class="fs-6 fw-bold font-monospace text-primary">{{ $peminjaman->kode_transaksi }}</span>
-                    @if($peminjaman->status === 'dipinjam')
+                    @if($peminjaman->status === 'menunggu_acc')
+                        <span class="badge bg-warning text-dark badge-status"><i class="bi bi-clock-history me-1"></i> Menunggu ACC</span>
+                    @elseif($peminjaman->status === 'dipinjam')
                         @if($peminjaman->isTerlambat())
                             <span class="badge bg-danger badge-status">Terlambat (Aktif)</span>
                         @else
-                            <span class="badge bg-warning text-dark badge-status">Sedang Dipinjam</span>
+                            <span class="badge bg-info text-white badge-status">Sedang Dipinjam</span>
                         @endif
                     @elseif($peminjaman->status === 'dikembalikan')
                         <span class="badge bg-success badge-status">Sudah Dikembalikan</span>
+                    @elseif($peminjaman->status === 'ditolak')
+                        <span class="badge bg-danger badge-status">Ditolak</span>
                     @else
                         <span class="badge bg-secondary badge-status">Dibatalkan</span>
                     @endif
@@ -296,6 +335,80 @@
                                     <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Tutup</button>
                                     <button type="submit" class="btn btn-sm btn-success">
                                         <i class="bi bi-check-lg me-1"></i> Simpan Sebagai LUNAS
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            @if($peminjaman->status === 'menunggu_acc')
+                <div class="card-footer bg-white border-top p-3 d-flex flex-column gap-2">
+                    <button type="button" class="btn btn-success w-100 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalAccDetail">
+                        <i class="bi bi-check-circle-fill me-1"></i> Setujui Peminjaman (ACC)
+                    </button>
+                    <button type="button" class="btn btn-outline-danger w-100 btn-sm" data-bs-toggle="modal" data-bs-target="#modalRejectDetail">
+                        <i class="bi bi-x-circle me-1"></i> Tolak Permohonan
+                    </button>
+                </div>
+
+                <!-- Modal ACC Detail -->
+                <div class="modal fade text-start" id="modalAccDetail" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <form action="{{ route('peminjaman.approve', $peminjaman->id) }}" method="POST">
+                                @csrf
+                                <div class="modal-header bg-success text-white">
+                                    <h6 class="modal-title fw-bold">Konfirmasi ACC Peminjaman</h6>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body p-4">
+                                    <p class="mb-2">Anda akan menyetujui peminjaman untuk:</p>
+                                    <div class="p-3 bg-light rounded-3 mb-3 border">
+                                        <strong>{{ $peminjaman->mahasiswa->nama }}</strong> ({{ $peminjaman->mahasiswa->nim }})<br>
+                                        <small class="text-muted">Kode Transaksi: {{ $peminjaman->kode_transaksi }}</small>
+                                    </div>
+                                    <div class="alert alert-info py-2 small mb-3">
+                                        <i class="bi bi-info-circle me-1"></i> Stok alat yang diminta akan otomatis dipotong secara atomik dari inventaris dan nomor unit fisik akan dialokasikan ke mahasiswa.
+                                    </div>
+                                    <div class="mb-0">
+                                        <label class="form-label small fw-semibold">Catatan Petugas (Opsional):</label>
+                                        <input type="text" name="catatan_admin" class="form-control form-control-sm" placeholder="Contoh: Disetujui, silakan ambil unit di Meja Lab 2">
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                                    <button type="submit" class="btn btn-sm btn-success px-3">
+                                        <i class="bi bi-check2-circle me-1"></i> Setujui Sekarang (ACC)
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Reject Detail -->
+                <div class="modal fade text-start" id="modalRejectDetail" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <form action="{{ route('peminjaman.reject', $peminjaman->id) }}" method="POST">
+                                @csrf
+                                <div class="modal-header bg-danger text-white">
+                                    <h6 class="modal-title fw-bold">Tolak Permohonan Peminjaman</h6>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body p-4">
+                                    <p class="mb-2">Apakah Anda yakin ingin menolak permohonan dari <strong>{{ $peminjaman->mahasiswa->nama }}</strong>?</p>
+                                    <div class="mb-0">
+                                        <label class="form-label small fw-semibold text-danger">Alasan Penolakan <span class="text-danger">*</span></label>
+                                        <textarea name="catatan_admin" class="form-control" rows="3" placeholder="Contoh: Alat sedang dalam jadwal perawatan / praktikum..." required></textarea>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                                    <button type="submit" class="btn btn-sm btn-danger px-3">
+                                        <i class="bi bi-x-circle me-1"></i> Tolak Permohonan
                                     </button>
                                 </div>
                             </form>

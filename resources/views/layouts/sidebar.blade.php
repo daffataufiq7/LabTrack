@@ -38,9 +38,23 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ route('peminjaman.index') }}" class="nav-link {{ request()->routeIs('peminjaman.index') || request()->routeIs('peminjaman.create') || request()->routeIs('peminjaman.show') || request()->routeIs('peminjaman.antrean_acc') ? 'active' : '' }}">
+                    <a href="{{ route('peminjaman.index') }}" class="nav-link {{ request()->routeIs('peminjaman.index') || request()->routeIs('peminjaman.create') ? 'active' : '' }}">
                         <i class="bi bi-calendar-check"></i>
                         <span>Peminjaman</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    @php
+                        $pendingAccCount = \App\Models\Peminjaman::where('status', 'menunggu_acc')->count();
+                    @endphp
+                    <a href="{{ route('peminjaman.antrean_acc') }}" class="nav-link {{ request()->routeIs('peminjaman.antrean_acc') ? 'active' : '' }} d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-patch-check"></i>
+                            <span>Verifikasi (ACC)</span>
+                        </div>
+                        @if($pendingAccCount > 0)
+                            <span class="badge rounded-pill bg-warning text-dark px-2" style="font-size: 0.7rem;">{{ $pendingAccCount }}</span>
+                        @endif
                     </a>
                 </li>
                 <li class="nav-item">

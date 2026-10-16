@@ -17,6 +17,26 @@
     </div>
 </div>
 
+@php
+    $pendingAccTotal = \App\Models\Peminjaman::where('status', 'menunggu_acc')->count();
+@endphp
+@if($pendingAccTotal > 0)
+    <div class="alert alert-warning border-warning border-opacity-50 shadow-sm d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 p-3 rounded-3 mb-4">
+        <div class="d-flex align-items-center gap-3">
+            <div class="p-2 bg-warning bg-opacity-25 text-warning-emphasis rounded-circle">
+                <i class="bi bi-bell-fill fs-4 text-warning"></i>
+            </div>
+            <div>
+                <h6 class="fw-bold mb-1 text-dark">Terdapat {{ $pendingAccTotal }} Permohonan Peminjaman Menunggu Persetujuan (ACC)!</h6>
+                <p class="text-muted small mb-0">Mahasiswa telah mengirimkan pengajuan sewa alat secara online. Silakan verifikasi ketersediaan stok fisik.</p>
+            </div>
+        </div>
+        <a href="{{ route('peminjaman.antrean_acc') }}" class="btn btn-sm btn-warning text-dark fw-semibold px-3 py-2 text-nowrap shadow-sm">
+            <i class="bi bi-patch-check-fill me-1"></i> Buka Antrean Verifikasi
+        </a>
+    </div>
+@endif
+
 <!-- 4 Kartu Statistik Utama (Screen 2) -->
 <div class="row g-3 mb-4">
     <!-- 1. Total Mahasiswa -->

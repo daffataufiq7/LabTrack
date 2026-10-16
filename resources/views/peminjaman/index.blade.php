@@ -9,7 +9,17 @@
         <h4 class="fw-bold text-dark mb-1">Transaksi Peminjaman</h4>
         <p class="text-muted small mb-0">Input dan kelola transaksi peminjaman alat.</p>
     </div>
-    <div>
+    <div class="d-flex align-items-center gap-2">
+        @php
+            $pendingAccTotal = \App\Models\Peminjaman::where('status', 'menunggu_acc')->count();
+        @endphp
+        <a href="{{ route('peminjaman.antrean_acc') }}" class="btn btn-sm btn-outline-warning text-dark border-warning d-inline-flex align-items-center gap-2 px-3 py-2 fw-semibold shadow-sm" style="border-radius: 8px;">
+            <i class="bi bi-patch-check-fill text-warning"></i>
+            <span>Antrean Verifikasi (ACC)</span>
+            @if($pendingAccTotal > 0)
+                <span class="badge bg-danger rounded-pill">{{ $pendingAccTotal }}</span>
+            @endif
+        </a>
         <a href="{{ route('peminjaman.create') }}" class="btn-primary-dark">
             <i class="bi bi-plus-lg"></i>
             <span>Peminjaman Baru</span>
@@ -103,6 +113,12 @@
                                 <a href="{{ route('peminjaman.show', $item->id) }}" class="btn-action-icon edit-btn" title="Detail Transaksi">
                                     <i class="bi bi-eye"></i>
                                 </a>
+                                @if($item->status === 'menunggu_acc')
+                                    <!-- Verifikasi / ACC Pengajuan -->
+                                    <a href="{{ route('peminjaman.antrean_acc') }}" class="btn-action-icon" style="color: #ca8a04; background-color: #fefce8;" title="Verifikasi / ACC Pengajuan Ini">
+                                        <i class="bi bi-patch-check"></i>
+                                    </a>
+                                @endif
                                 @if($item->status === 'dipinjam')
                                     <!-- Proses Kembalikan -->
                                     <a href="{{ route('pengembalian.form', $item->id) }}" class="btn-action-icon" style="color: #16a34a;" title="Proses Pengembalian">
