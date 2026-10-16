@@ -52,6 +52,7 @@ class AlatController extends Controller
             'kode_alat' => ['required', 'string', 'max:30', 'unique:alat,kode_alat'],
             'nama_alat' => ['required', 'string', 'max:150'],
             'kategori' => ['required', 'string', 'max:100'],
+            'gambar' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:3072'],
             'stok_total' => ['required', 'integer', 'min:0'],
             'stok_tersedia' => ['required', 'integer', 'min:0', 'lte:stok_total'],
             'stok_rusak' => ['nullable', 'integer', 'min:0'],
@@ -61,12 +62,21 @@ class AlatController extends Controller
             'kode_alat.unique' => 'Kode alat sudah digunakan.',
             'nama_alat.required' => 'Nama alat wajib diisi.',
             'kategori.required' => 'Kategori alat wajib diisi.',
+            'gambar.image' => 'File harus berupa gambar (JPG, PNG, atau WEBP).',
+            'gambar.max' => 'Ukuran gambar maksimal 3MB.',
             'stok_total.required' => 'Stok total wajib diisi.',
             'stok_total.min' => 'Stok total tidak boleh bernilai negatif.',
             'stok_tersedia.required' => 'Stok tersedia wajib diisi.',
             'stok_tersedia.lte' => 'Stok tersedia tidak boleh melebihi stok total.',
             'kondisi.required' => 'Kondisi fisik alat wajib diisi.',
         ]);
+
+        if ($request->hasFile('gambar')) {
+            $file = $request->file('gambar');
+            $filename = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $file->getClientOriginalName());
+            $file->move(public_path('images/alat'), $filename);
+            $validated['gambar'] = 'images/alat/' . $filename;
+        }
 
         $validated['stok_rusak'] = $validated['stok_rusak'] ?? 0;
         Alat::create($validated);
@@ -87,6 +97,7 @@ class AlatController extends Controller
             'kode_alat' => ['required', 'string', 'max:30', Rule::unique('alat', 'kode_alat')->ignore($alat->id)],
             'nama_alat' => ['required', 'string', 'max:150'],
             'kategori' => ['required', 'string', 'max:100'],
+            'gambar' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:3072'],
             'stok_total' => ['required', 'integer', 'min:0'],
             'stok_tersedia' => ['required', 'integer', 'min:0', 'lte:stok_total'],
             'stok_rusak' => ['nullable', 'integer', 'min:0'],
@@ -96,12 +107,26 @@ class AlatController extends Controller
             'kode_alat.unique' => 'Kode alat sudah digunakan alat lain.',
             'nama_alat.required' => 'Nama alat wajib diisi.',
             'kategori.required' => 'Kategori alat wajib diisi.',
+            'gambar.image' => 'File harus berupa gambar (JPG, PNG, atau WEBP).',
+            'gambar.max' => 'Ukuran gambar maksimal 3MB.',
             'stok_total.required' => 'Stok total wajib diisi.',
             'stok_total.min' => 'Stok total tidak boleh bernilai negatif.',
             'stok_tersedia.required' => 'Stok tersedia wajib diisi.',
             'stok_tersedia.lte' => 'Stok tersedia tidak boleh melebihi stok total.',
             'kondisi.required' => 'Kondisi alat wajib diisi.',
         ]);
+
+        if ($request->hasFile('gambar')) {
+            $file = $request->file('gambar');
+            $filename = time() . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '', $file->getClientOriginalName());
+            $file->move(public_path('images/alat'), $filename);
+
+            if ($alat->gambar && file_exists(public_path($alat->gambar)) && !str_contains($alat->gambar, 'default_')) {
+                @unlink(public_path($alat->gambar));
+            }
+
+            $validated['gambar'] = 'images/alat/' . $filename;
+        }
 
         $validated['stok_rusak'] = $validated['stok_rusak'] ?? 0;
         $alat->update($validated);

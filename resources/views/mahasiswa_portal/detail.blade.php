@@ -161,24 +161,29 @@
                                 <tr>
                                     <td class="text-muted">{{ $idx + 1 }}</td>
                                     <td>
-                                        <div class="fw-semibold text-dark">{{ $detail->alat->nama_alat }}</div>
-                                        <div class="small text-muted font-monospace">{{ $detail->alat->kode_alat }}</div>
-                                        @if($detail->kode_unit_dipinjam)
-                                            <div class="mt-1 d-flex flex-wrap gap-1 align-items-center">
-                                                <span class="badge bg-light text-secondary border font-monospace" style="font-size: 0.7rem;">
-                                                    <i class="bi bi-upc-scan text-primary me-1"></i>Unit Fisik:
-                                                </span>
-                                                @foreach($detail->unit_list as $unitCode)
-                                                    <span class="badge bg-primary-subtle text-primary border border-primary font-monospace" style="font-size: 0.72rem;">
-                                                        {{ $unitCode }}
-                                                    </span>
-                                                @endforeach
+                                        <div class="d-flex align-items-center gap-3">
+                                            <img src="{{ $detail->alat->gambar_url }}" alt="{{ $detail->alat->nama_alat }}" class="rounded-3 border shadow-xs flex-shrink-0" style="width: 48px; height: 48px; object-fit: cover;">
+                                            <div>
+                                                <div class="fw-semibold text-dark">{{ $detail->alat->nama_alat }}</div>
+                                                <div class="small text-muted font-monospace">{{ $detail->alat->kode_alat }}</div>
+                                                @if($detail->kode_unit_dipinjam)
+                                                    <div class="mt-1 d-flex flex-wrap gap-1 align-items-center">
+                                                        <span class="badge bg-light text-secondary border font-monospace" style="font-size: 0.7rem;">
+                                                            <i class="bi bi-upc-scan text-primary me-1"></i>Unit Fisik:
+                                                        </span>
+                                                        @foreach($detail->unit_list as $unitCode)
+                                                            <span class="badge bg-primary-subtle text-primary border border-primary font-monospace" style="font-size: 0.72rem;">
+                                                                {{ $unitCode }}
+                                                            </span>
+                                                        @endforeach
+                                                    </div>
+                                                @elseif($peminjaman->status === 'menunggu_acc')
+                                                    <div class="text-muted small mt-1" style="font-size: 0.72rem;">
+                                                        <i class="bi bi-clock me-1"></i>Kode unit fisik terkalibrasi diterbitkan saat di-ACC petugas
+                                                    </div>
+                                                @endif
                                             </div>
-                                        @elseif($peminjaman->status === 'menunggu_acc')
-                                            <div class="text-muted small mt-1" style="font-size: 0.72rem;">
-                                                <i class="bi bi-clock me-1"></i>Kode unit fisik terkalibrasi diterbitkan saat di-ACC petugas
-                                            </div>
-                                        @endif
+                                        </div>
                                     </td>
                                     <td>
                                         <span class="badge bg-secondary-subtle text-secondary border px-2 py-1">

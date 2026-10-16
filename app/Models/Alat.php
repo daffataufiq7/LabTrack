@@ -16,6 +16,7 @@ class Alat extends Model
         'kode_alat',
         'nama_alat',
         'kategori',
+        'gambar',
         'stok_total',
         'stok_tersedia',
         'stok_rusak',
@@ -142,5 +143,31 @@ class Alat extends Model
             ->whereHas('peminjaman', function ($q) {
                 $q->where('status', 'dipinjam');
             })->exists();
+    }
+
+    /**
+     * Mendapatkan URL gambar publik alat atau fallback gambar default.
+     */
+    public function getGambarUrlAttribute(): string
+    {
+        if ($this->gambar && file_exists(public_path($this->gambar))) {
+            return asset($this->gambar);
+        }
+
+        // Cek fallback gambar spesifik berdasarkan kode_alat
+        $kodeClean = strtolower(str_replace('-', '_', $this->kode_alat));
+        $possiblePaths = [
+            "images/alat/{$kodeClean}.jpg",
+            "images/alat/{$kodeClean}.png",
+            "images/alat/{$kodeClean}.webp",
+        ];
+
+        foreach ($possiblePaths as $path) {
+            if (file_exists(public_path($path))) {
+                return asset($path);
+            }
+        }
+
+        return asset('images/alat/default_instrument.jpg');
     }
 }

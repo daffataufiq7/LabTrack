@@ -114,19 +114,27 @@
                                 <!-- Baris Pertama -->
                                 <tr class="baris-item">
                                     <td>
-                                        <select name="items[0][alat_id]" class="form-select select-alat" required>
-                                            <option value="">-- Pilih Alat Laboratorium --</option>
-                                            @foreach($alat as $item)
-                                                <option value="{{ $item->id }}" 
-                                                        data-stok="{{ $item->stok_tersedia }}" 
-                                                        data-rusak="{{ $item->stok_rusak }}"
-                                                        data-kode="{{ $item->kode_alat }}"
-                                                        {{ $item->stok_tersedia == 0 ? 'disabled' : '' }}
-                                                        {{ (old('items.0.alat_id', request('alat_id')) == $item->id) ? 'selected' : '' }}>
-                                                    [{{ $item->kode_alat }}] {{ $item->nama_alat }} — {{ $item->stok_tersedia > 0 ? "Stok Ready: {$item->stok_tersedia} Unit (Siap Pakai)" : "STOK HABIS (0 Unit)" }}{{ $item->stok_rusak > 0 ? " [{$item->stok_rusak} Unit Karantina Rusak]" : "" }}
-                                                </option>
-                                            @endforeach
-                                        </select>
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="rounded-3 border bg-light d-flex align-items-center justify-content-center flex-shrink-0 shadow-xs" style="width: 52px; height: 52px; overflow: hidden;">
+                                                <img class="img-alat-preview" src="{{ asset('images/alat/default_instrument.jpg') }}" alt="Foto Alat" style="width: 100%; height: 100%; object-fit: cover;">
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <select name="items[0][alat_id]" class="form-select select-alat" required>
+                                                    <option value="" data-gambar="{{ asset('images/alat/default_instrument.jpg') }}">-- Pilih Alat Laboratorium --</option>
+                                                    @foreach($alat as $item)
+                                                        <option value="{{ $item->id }}" 
+                                                                data-stok="{{ $item->stok_tersedia }}" 
+                                                                data-rusak="{{ $item->stok_rusak }}"
+                                                                data-kode="{{ $item->kode_alat }}"
+                                                                data-gambar="{{ $item->gambar_url }}"
+                                                                {{ $item->stok_tersedia == 0 ? 'disabled' : '' }}
+                                                                {{ (old('items.0.alat_id', request('alat_id')) == $item->id) ? 'selected' : '' }}>
+                                                            [{{ $item->kode_alat }}] {{ $item->nama_alat }} — {{ $item->stok_tersedia > 0 ? "Stok Ready: {$item->stok_tersedia} Unit" : "STOK HABIS (0 Unit)" }}{{ $item->stok_rusak > 0 ? " [{$item->stok_rusak} Karantina]" : "" }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                        </div>
                                     </td>
                                     <td>
                                         <input type="number" name="items[0][jumlah]" class="form-control text-center input-jumlah" min="1" max="10" value="1" required>
@@ -238,7 +246,12 @@ document.addEventListener('DOMContentLoaded', function () {
         const select = row.querySelector('.select-alat');
         const badgeContainer = row.querySelector('.badge-stok-container');
         const inputJumlah = row.querySelector('.input-jumlah');
+        const imgPreview = row.querySelector('.img-alat-preview');
         const selectedOption = select.options[select.selectedIndex];
+
+        if (imgPreview) {
+            imgPreview.src = (selectedOption && selectedOption.dataset.gambar) ? selectedOption.dataset.gambar : '{{ asset("images/alat/default_instrument.jpg") }}';
+        }
 
         if (selectedOption && selectedOption.dataset.stok !== undefined && selectedOption.value !== '') {
             const stok = parseInt(selectedOption.dataset.stok);
@@ -302,6 +315,11 @@ document.addEventListener('DOMContentLoaded', function () {
         input.value = 1;
         input.disabled = false;
         btnHapus.disabled = false;
+
+        const clonedImg = templateRow.querySelector('.img-alat-preview');
+        if (clonedImg) {
+            clonedImg.src = '{{ asset("images/alat/default_instrument.jpg") }}';
+        }
 
         templateRow.querySelector('.badge-stok-container').innerHTML = '<span class="badge bg-secondary-subtle text-secondary">-</span>';
 

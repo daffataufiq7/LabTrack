@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('kode_alat', 30)->unique();
             $table->string('nama_alat', 150);
             $table->string('kategori', 100);
+            $table->string('gambar')->nullable();
             $table->unsignedInteger('stok_total');
             $table->unsignedInteger('stok_tersedia');
             $table->unsignedInteger('stok_rusak')->default(0);

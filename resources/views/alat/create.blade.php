@@ -17,7 +17,7 @@
                 </a>
             </div>
             <div class="card-body p-4">
-                <form action="{{ route('alat.store') }}" method="POST">
+                <form action="{{ route('alat.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
 
                     <div class="row g-3">
@@ -57,6 +57,23 @@
                             @error('nama_alat')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
+                        </div>
+
+                        <!-- Foto / Gambar Alat -->
+                        <div class="col-12">
+                            <label for="gambar" class="form-label">Foto / Gambar Alat Laboratorium</label>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="border rounded-3 p-1 bg-light d-flex align-items-center justify-content-center shadow-xs" style="width: 72px; height: 72px; overflow: hidden; flex-shrink: 0;">
+                                    <img id="imagePreview" src="{{ asset('images/alat/default_instrument.jpg') }}" alt="Preview" style="width: 100%; height: 100%; object-fit: cover; border-radius: 6px;">
+                                </div>
+                                <div class="flex-grow-1">
+                                    <input type="file" name="gambar" id="gambar" class="form-control @error('gambar') is-invalid @enderror" accept="image/png, image/jpeg, image/jpg, image/webp" onchange="previewImage(this)">
+                                    @error('gambar')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                    <div class="form-text">Unggah foto alat laboratorium (Format JPG, PNG, atau WEBP, maks 3MB).</div>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Stok Total -->
@@ -122,5 +139,15 @@
     stokTersediaInput.addEventListener('input', function() {
         this.dataset.manualEdited = true;
     });
+
+    function previewImage(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('imagePreview').src = e.target.result;
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
 </script>
 @endpush

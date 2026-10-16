@@ -96,14 +96,17 @@
                                 <!-- Baris Pertama Default -->
                                 <tr class="baris-item" data-index="0">
                                     <td>
-                                        <select name="items[0][alat_id]" class="form-select select-alat" required>
-                                            <option value="" data-stok="0">-- Pilih Alat Lab --</option>
-                                            @foreach($alat as $item)
-                                                <option value="{{ $item->id }}" data-stok="{{ $item->stok_tersedia }}">
-                                                    {{ $item->kode_alat }} — {{ $item->nama_alat }} (Tersedia: {{ $item->stok_tersedia }} unit)
-                                                </option>
-                                            @endforeach
-                                        </select>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <img class="img-alat-thumb rounded-3 border bg-light shadow-xs flex-shrink-0" src="{{ asset('images/alat/default_instrument.jpg') }}" alt="Alat" style="width: 44px; height: 44px; object-fit: cover;">
+                                            <select name="items[0][alat_id]" class="form-select select-alat" required>
+                                                <option value="" data-stok="0" data-gambar="{{ asset('images/alat/default_instrument.jpg') }}">-- Pilih Alat Lab --</option>
+                                                @foreach($alat as $item)
+                                                    <option value="{{ $item->id }}" data-stok="{{ $item->stok_tersedia }}" data-gambar="{{ $item->gambar_url }}">
+                                                        {{ $item->kode_alat }} — {{ $item->nama_alat }} (Tersedia: {{ $item->stok_tersedia }} unit)
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
                                     </td>
                                     <td>
                                         <input type="number" name="items[0][jumlah]" class="form-control text-center input-jumlah" min="1" value="1" required>
@@ -173,6 +176,11 @@ document.addEventListener('DOMContentLoaded', function () {
         const selectedOption = select.options[select.selectedIndex];
         const stokTersedia = parseInt(selectedOption?.dataset?.stok || 0);
         const jumlahMinta = parseInt(inputJumlah.value || 0);
+
+        const imgThumb = row.querySelector('.img-alat-thumb');
+        if (imgThumb) {
+            imgThumb.src = selectedOption?.dataset?.gambar || '{{ asset("images/alat/default_instrument.jpg") }}';
+        }
 
         if (!select.value) {
             badgeSisa.className = 'badge bg-light text-dark border badge-stok-sisa px-2 py-1';
@@ -253,9 +261,12 @@ document.addEventListener('DOMContentLoaded', function () {
         newRow.dataset.index = rowIndex;
         newRow.innerHTML = `
             <td>
-                <select name="items[${rowIndex}][alat_id]" class="form-select select-alat" required>
-                    ${selectOptions}
-                </select>
+                <div class="d-flex align-items-center gap-2">
+                    <img class="img-alat-thumb rounded-3 border bg-light shadow-xs flex-shrink-0" src="{{ asset('images/alat/default_instrument.jpg') }}" alt="Alat" style="width: 44px; height: 44px; object-fit: cover;">
+                    <select name="items[${rowIndex}][alat_id]" class="form-select select-alat" required>
+                        ${selectOptions}
+                    </select>
+                </div>
             </td>
             <td>
                 <input type="number" name="items[${rowIndex}][jumlah]" class="form-control text-center input-jumlah" min="1" value="1" required>

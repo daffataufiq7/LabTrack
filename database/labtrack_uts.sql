@@ -39,6 +39,7 @@ CREATE TABLE `alat` (
     `kode_alat` VARCHAR(30) NOT NULL,
     `nama_alat` VARCHAR(150) NOT NULL,
     `kategori` VARCHAR(100) NOT NULL,
+    `gambar` VARCHAR(255) NULL,
     `stok_total` INT UNSIGNED NOT NULL DEFAULT 0,
     `stok_tersedia` INT UNSIGNED NOT NULL DEFAULT 0,
     `stok_rusak` INT UNSIGNED NOT NULL DEFAULT 0,
@@ -170,14 +171,14 @@ INSERT INTO `mahasiswa` (`id`, `nim`, `nama`, `program_studi`, `no_hp`) VALUES
 (5, '22051204049', 'Rian Hidayatullah', 'Sistem Informasi', '089611223344');
 
 -- Insert Master Data Alat
-INSERT INTO `alat` (`id`, `kode_alat`, `nama_alat`, `kategori`, `stok_total`, `stok_tersedia`, `stok_rusak`, `kondisi`) VALUES
-(1, 'ALT-ELK-001', 'Osiloskop Digital Rigol DS1054Z', 'Elektronika & Instrumentasi', 8, 7, 0, 'Baik'),
-(2, 'ALT-ELK-002', 'Multimeter Digital Sanwa CD800a', 'Elektronika & Instrumentasi', 15, 15, 0, 'Baik'),
-(3, 'ALT-IOT-001', 'ESP32 NodeMCU Development Board kit', 'IoT & Embedded System', 20, 19, 1, 'Baik'),
-(4, 'ALT-IOT-002', 'Raspberry Pi 4 Model B (4GB RAM)', 'IoT & Embedded System', 10, 8, 0, 'Baik'),
-(5, 'ALT-JRG-001', 'Crimping Tool RJ45 Proskit + Cable Tester', 'Jaringan Komputer', 12, 12, 0, 'Baik'),
-(6, 'ALT-OPT-001', 'Mikroskop Binokuler Olympus CX23', 'Instrumen & Optik', 6, 6, 0, 'Baik'),
-(7, 'ALT-PRK-001', 'Solder Station Hakko FX-888D ESD Safe', 'Perkakas Lab', 10, 8, 0, 'Baik');
+INSERT INTO `alat` (`id`, `kode_alat`, `nama_alat`, `kategori`, `gambar`, `stok_total`, `stok_tersedia`, `stok_rusak`, `kondisi`) VALUES
+(1, 'ALT-ELK-001', 'Osiloskop Digital Rigol DS1054Z', 'Elektronika & Instrumentasi', 'images/alat/alt_elk_001.jpg', 8, 7, 0, 'Baik'),
+(2, 'ALT-ELK-002', 'Multimeter Digital Sanwa CD800a', 'Elektronika & Instrumentasi', 'images/alat/alt_elk_002.jpg', 15, 15, 0, 'Baik'),
+(3, 'ALT-IOT-001', 'ESP32 NodeMCU Development Board kit', 'IoT & Embedded System', 'images/alat/alt_iot_001.jpg', 20, 19, 1, 'Baik'),
+(4, 'ALT-IOT-002', 'Raspberry Pi 4 Model B (4GB RAM)', 'IoT & Embedded System', 'images/alat/alt_iot_002.jpg', 10, 8, 0, 'Baik'),
+(5, 'ALT-JRG-001', 'Crimping Tool RJ45 Proskit + Cable Tester', 'Jaringan Komputer', 'images/alat/alt_jrg_001.jpg', 12, 12, 0, 'Baik'),
+(6, 'ALT-OPT-001', 'Mikroskop Binokuler Olympus CX23', 'Instrumen & Optik', 'images/alat/alt_opt_001.jpg', 6, 6, 0, 'Baik'),
+(7, 'ALT-PRK-001', 'Solder Station Hakko FX-888D ESD Safe', 'Perkakas Lab', 'images/alat/alt_prk_001.jpg', 10, 8, 0, 'Baik');
 
 -- Insert Data Transaksi 1: Selesai Tepat Waktu (Denda 0, Biaya 0)
 INSERT INTO `peminjaman` (`id`, `kode_transaksi`, `mahasiswa_id`, `tanggal_pinjam`, `tanggal_jatuh_tempo`, `tanggal_kembali`, `status`, `total_denda`, `total_biaya_perbaikan`) VALUES

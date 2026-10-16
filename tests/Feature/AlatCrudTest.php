@@ -8,6 +8,8 @@ use App\Models\Mahasiswa;
 use App\Models\Peminjaman;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\File;
 use Tests\TestCase;
 
 class AlatCrudTest extends TestCase
@@ -253,5 +255,56 @@ class AlatCrudTest extends TestCase
         // Stok induk harus mencerminkan 1 tersedia dan 1 rusak
         $this->assertEquals(1, $alat->fresh()->stok_tersedia);
         $this->assertEquals(1, $alat->fresh()->stok_rusak);
+    }
+
+    public function test_can_upload_image_when_creating_and_updating_alat(): void
+    {
+        $fakeImage = UploadedFile::fake()->image('test_oscillo.jpg', 600, 600);
+        $alat = null;
+        $oldFilePath = null;
+
+        try {
+            $response = $this->post(route('alat.store'), [
+                'kode_alat' => 'ALT-IMG-001',
+                'nama_alat' => 'Alat Dengan Gambar',
+                'kategori' => 'Elektronika',
+                'stok_total' => 2,
+                'stok_tersedia' => 2,
+                'kondisi' => 'Baik',
+                'gambar' => $fakeImage,
+            ]);
+
+            $response->assertRedirect(route('alat.index'));
+            $alat = Alat::where('kode_alat', 'ALT-IMG-001')->first();
+            $this->assertNotNull($alat);
+            $this->assertNotNull($alat->gambar);
+            $this->assertStringStartsWith('images/alat/', $alat->gambar);
+            $this->assertFileExists(public_path($alat->gambar));
+
+            // Test update dengan gambar baru
+            $newImage = UploadedFile::fake()->image('test_oscillo_updated.png', 600, 600);
+            $oldFilePath = public_path($alat->gambar);
+
+            $updateResponse = $this->put(route('alat.update', $alat->id), [
+                'kode_alat' => 'ALT-IMG-001',
+                'nama_alat' => 'Alat Dengan Gambar Terupdate',
+                'kategori' => 'Elektronika',
+                'stok_total' => 2,
+                'stok_tersedia' => 2,
+                'kondisi' => 'Baik',
+                'gambar' => $newImage,
+            ]);
+
+            $updateResponse->assertRedirect(route('alat.index'));
+            $alat->refresh();
+            $this->assertFileExists(public_path($alat->gambar));
+        } finally {
+            if ($alat && $alat->gambar && File::exists(public_path($alat->gambar))) {
+                File::delete(public_path($alat->gambar));
+            }
+            if ($oldFilePath && File::exists($oldFilePath)) {
+                File::delete($oldFilePath);
+            }
+        }
     }
 }

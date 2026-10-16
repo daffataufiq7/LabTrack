@@ -37,28 +37,34 @@
 <div class="row g-3">
     @forelse($alat as $item)
         <div class="col-12 col-md-6 col-lg-4">
-            <div class="card shadow-sm border-0 h-100 hover-card">
+            <div class="card shadow-sm border-0 h-100 hover-card overflow-hidden" style="border-radius: 14px;">
+                <!-- Foto Alat Laboratorium -->
+                <div class="position-relative" style="height: 190px; overflow: hidden; background-color: #f8fafc;">
+                    <img src="{{ $item->gambar_url }}" alt="{{ $item->nama_alat }}" class="w-100 h-100" style="object-fit: cover;">
+                    <div class="position-absolute top-0 start-0 m-3">
+                        <span class="badge bg-dark bg-opacity-75 text-white font-monospace px-2 py-1 shadow-sm" style="backdrop-filter: blur(4px);">
+                            {{ $item->kode_alat }}
+                        </span>
+                    </div>
+                    <div class="position-absolute top-0 end-0 m-3">
+                        @if($item->stok_tersedia > 0)
+                            <span class="badge bg-success shadow-sm px-2 py-1">
+                                <i class="bi bi-check-circle me-1"></i> Ready {{ $item->stok_tersedia }} Unit
+                            </span>
+                        @else
+                            <span class="badge bg-danger shadow-sm px-2 py-1">
+                                <i class="bi bi-x-circle me-1"></i> Stok Habis
+                            </span>
+                        @endif
+                    </div>
+                </div>
+
                 <div class="card-body p-4 d-flex flex-column justify-content-between">
                     <div>
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <span class="badge bg-light text-primary border font-monospace px-2 py-1">
-                                {{ $item->kode_alat }}
-                            </span>
-                            @if($item->stok_tersedia > 0)
-                                <span class="badge bg-success-subtle text-success border border-success px-2 py-1">
-                                    <i class="bi bi-check-circle me-1"></i> Ready {{ $item->stok_tersedia }} Unit
-                                </span>
-                            @else
-                                <span class="badge bg-danger-subtle text-danger border border-danger px-2 py-1">
-                                    <i class="bi bi-x-circle me-1"></i> Stok Habis
-                                </span>
-                            @endif
-                        </div>
-
-                        <h6 class="fw-bold text-dark mb-1">{{ $item->nama_alat }}</h6>
-                        <span class="badge bg-secondary-subtle text-secondary mb-3" style="font-size: 0.72rem;">
+                        <span class="badge bg-secondary-subtle text-secondary mb-2" style="font-size: 0.72rem;">
                             {{ $item->kategori }}
                         </span>
+                        <h6 class="fw-bold text-dark mb-3" style="font-size: 1.05rem;">{{ $item->nama_alat }}</h6>
 
                         <div class="bg-light p-2 rounded small mb-3">
                             <div class="d-flex justify-content-between mb-1">

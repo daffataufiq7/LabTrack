@@ -62,8 +62,13 @@
                     <tr>
                         <td>{{ $alat->firstItem() + $index }}</td>
                         <td>
-                            <span class="fw-semibold text-dark d-block">{{ $item->nama_alat }}</span>
-                            <small class="text-muted font-monospace" style="font-size: 0.72rem;">{{ $item->kode_alat }}</small>
+                            <div class="d-flex align-items-center gap-3">
+                                <img src="{{ $item->gambar_url }}" alt="{{ $item->nama_alat }}" class="rounded-3 border shadow-sm flex-shrink-0" style="width: 46px; height: 46px; object-fit: cover;">
+                                <div>
+                                    <span class="fw-semibold text-dark d-block">{{ $item->nama_alat }}</span>
+                                    <small class="text-muted font-monospace" style="font-size: 0.72rem;">{{ $item->kode_alat }}</small>
+                                </div>
+                            </div>
                         </td>
                         <td class="text-secondary">{{ $item->kategori }}</td>
                         <td class="text-center fw-bold text-dark">
