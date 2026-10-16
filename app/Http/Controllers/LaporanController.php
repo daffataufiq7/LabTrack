@@ -5,12 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Peminjaman;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class LaporanController extends Controller
 {
     public function index(Request $request)
     {
         $statusFilter = $request->input('status', 'semua');
+        $tabActive = $request->input('tab', 'peminjaman');
         $dariTanggal = $request->input('dari_tanggal');
         $sampaiTanggal = $request->input('sampai_tanggal');
 
@@ -50,12 +52,24 @@ class LaporanController extends Controller
 
         $totalDenda = (clone $query)->where('status', 'dikembalikan')->sum('total_denda');
         $totalBiayaPerbaikan = (clone $query)->where('status', 'dikembalikan')->sum('total_biaya_perbaikan');
+        $totalPendapatan = $totalDenda + $totalBiayaPerbaikan;
 
-        $laporan = $query->orderByDesc('id')->paginate(15)->withQueryString();
+        $laporan = $query->orderByDesc('id')->paginate(10)->withQueryString();
+
+        // Peminjaman per kategori alat untuk bar statistik
+        $kategoriDistribution = DB::table('detail_peminjaman')
+            ->join('alat', 'detail_peminjaman.alat_id', '=', 'alat.id')
+            ->select('alat.kategori', DB::raw('SUM(detail_peminjaman.jumlah) as total'))
+            ->groupBy('alat.kategori')
+            ->orderByDesc('total')
+            ->get();
+
+        $maxKategoriCount = $kategoriDistribution->max('total') ?: 1;
 
         return view('laporan.index', compact(
             'laporan',
             'statusFilter',
+            'tabActive',
             'dariTanggal',
             'sampaiTanggal',
             'totalTransaksi',
@@ -63,7 +77,10 @@ class LaporanController extends Controller
             'totalDikembalikan',
             'totalTerlambat',
             'totalDenda',
-            'totalBiayaPerbaikan'
+            'totalBiayaPerbaikan',
+            'totalPendapatan',
+            'kategoriDistribution',
+            'maxKategoriCount'
         ));
     }
 

@@ -4,28 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'LabTrack') — Sistem Peminjaman Alat Laboratorium</title>
+    <title>@yield('title', 'LabBorrow') — Sistem Peminjaman Alat Laboratorium</title>
 
-    <!-- Google Fonts: Inter & Plus Jakarta Sans -->
+    <!-- Google Fonts: Plus Jakarta Sans & Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Bootstrap 5.3 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
+    <!-- Chart.js for Dashboard & Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
         :root {
-            --sidebar-bg: #0f172a;
-            --sidebar-hover: #1e293b;
-            --sidebar-active: #2563eb;
+            --sidebar-bg: #111c2e;
+            --sidebar-hover: #182740;
+            --sidebar-active: #1d2c45;
+            --sidebar-text: #94a3b8;
             --content-bg: #f8fafc;
             --card-border: #e2e8f0;
+            --primary-blue: #1e40af;
             --primary-accent: #2563eb;
-            --font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
         body {
@@ -39,7 +44,7 @@
 
         /* Sidebar Styling */
         .sidebar {
-            width: 260px;
+            width: 250px;
             background-color: var(--sidebar-bg);
             min-height: 100vh;
             display: flex;
@@ -50,20 +55,59 @@
             left: 0;
             z-index: 1040;
             transition: transform 0.3s ease-in-out;
-            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.12);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar-brand {
+            padding: 24px 20px 20px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .sidebar-brand-icon {
+            width: 36px;
+            height: 36px;
+            border: 2px solid rgba(255, 255, 255, 0.85);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-size: 1.25rem;
+        }
+
+        .sidebar-brand-title {
+            color: #ffffff;
+            font-size: 1.15rem;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+            line-height: 1.1;
+        }
+
+        .sidebar-brand-subtitle {
+            color: #64748b;
+            font-size: 0.68rem;
+            display: block;
+            margin-top: 3px;
         }
 
         .sidebar .nav-link {
-            color: #94a3b8;
-            font-size: 0.88rem;
+            color: var(--sidebar-text);
+            font-size: 0.875rem;
             font-weight: 500;
-            padding: 0.65rem 0.9rem;
-            border-radius: 0.5rem;
+            padding: 0.65rem 1rem;
+            margin: 2px 14px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
             transition: all 0.2s ease;
         }
 
         .sidebar .nav-link:hover {
-            color: #f8fafc;
+            color: #ffffff;
             background-color: var(--sidebar-hover);
         }
 
@@ -71,22 +115,69 @@
             color: #ffffff;
             background-color: var(--sidebar-active);
             font-weight: 600;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
         }
 
         .sidebar .nav-link i {
-            font-size: 1.15rem;
+            font-size: 1.1rem;
+            width: 20px;
+            text-align: center;
         }
 
         /* Main Wrapper */
         .main-wrapper {
             flex-grow: 1;
-            margin-left: 260px;
+            margin-left: 250px;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             background-color: var(--content-bg);
             transition: margin-left 0.3s ease-in-out;
+        }
+
+        /* Top Navbar */
+        .top-navbar {
+            background-color: #ffffff;
+            border-bottom: 1px solid var(--card-border);
+            padding: 12px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1020;
+        }
+
+        .navbar-search {
+            position: relative;
+            max-width: 380px;
+            width: 100%;
+        }
+
+        .navbar-search input {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 9999px;
+            padding: 7px 16px 7px 38px;
+            font-size: 0.84rem;
+            color: #475569;
+            width: 100%;
+            transition: all 0.2s ease;
+        }
+
+        .navbar-search input:focus {
+            background-color: #ffffff;
+            border-color: #94a3b8;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+        }
+
+        .navbar-search i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            font-size: 0.88rem;
         }
 
         /* Mobile Sidebar Backdrop */
@@ -97,7 +188,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(15, 23, 42, 0.6);
+            background: rgba(17, 28, 46, 0.6);
             backdrop-filter: blur(2px);
             z-index: 1035;
         }
@@ -117,115 +208,166 @@
             }
         }
 
-        /* Custom Cards & Shadows */
+        /* Custom Cards */
         .card {
             border: 1px solid var(--card-border);
-            border-radius: 0.85rem;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border-radius: 12px;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
             background-color: #ffffff;
         }
 
-        .stat-card {
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        /* Stat Cards */
+        .stat-card-custom {
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.2s ease;
         }
 
-        .stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+        .stat-card-custom:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transform: translateY(-1px);
         }
 
-        .icon-box {
+        .stat-icon-wrapper {
             width: 48px;
             height: 48px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 0.75rem;
+            font-size: 1.35rem;
         }
 
-        /* Tables */
-        .table thead th {
-            background-color: #f8fafc;
-            color: #475569;
+        /* Tables matching design */
+        .table-custom {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .table-custom thead th {
+            background-color: #ffffff;
+            color: #64748b;
             font-weight: 600;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border-bottom: 1px solid var(--card-border);
-            padding: 0.85rem 1rem;
+            font-size: 0.78rem;
+            text-transform: none;
+            padding: 12px 16px;
+            border-bottom: 1px solid #e2e8f0;
         }
 
-        .table tbody td {
-            padding: 0.85rem 1rem;
-            vertical-align: middle;
-            font-size: 0.88rem;
+        .table-custom tbody td {
+            padding: 12px 16px;
+            font-size: 0.85rem;
             color: #334155;
             border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
         }
 
-        .table-hover tbody tr:hover {
+        .table-custom tbody tr:hover td {
             background-color: #f8fafc;
         }
 
-        /* Status Badges */
-        .badge-status {
-            font-weight: 600;
-            padding: 0.35rem 0.65rem;
+        /* Status Pills */
+        .badge-pill-status {
+            padding: 4px 12px;
             border-radius: 9999px;
             font-size: 0.75rem;
-            letter-spacing: 0.2px;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .badge-pill-success {
+            background-color: #dcfce7;
+            color: #15803d;
+        }
+
+        .badge-pill-info {
+            background-color: #e0f2fe;
+            color: #0369a1;
+        }
+
+        .badge-pill-danger {
+            background-color: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .badge-pill-warning {
+            background-color: #fef3c7;
+            color: #b45309;
+        }
+
+        /* Action Buttons */
+        .btn-action-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            color: #475569;
+            text-decoration: none;
+            transition: all 0.15s ease;
+        }
+
+        .btn-action-icon:hover {
+            background-color: #f1f5f9;
+            color: #1e293b;
+        }
+
+        .btn-action-icon.edit-btn:hover {
+            border-color: #38bdf8;
+            color: #0284c7;
+            background-color: #f0f9ff;
+        }
+
+        .btn-action-icon.delete-btn:hover {
+            border-color: #f87171;
+            color: #dc2626;
+            background-color: #fef2f2;
+        }
+
+        /* Buttons */
+        .btn-primary-dark {
+            background-color: #1e40af;
+            border: 1px solid #1e40af;
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 0.84rem;
+            padding: 8px 16px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .btn-primary-dark:hover {
+            background-color: #1d4ed8;
+            border-color: #1d4ed8;
+            color: #ffffff;
+            box-shadow: 0 2px 6px rgba(30, 64, 175, 0.2);
         }
 
         /* Form Controls */
         .form-control, .form-select {
             border-color: #cbd5e1;
-            border-radius: 0.55rem;
-            font-size: 0.88rem;
-            padding: 0.6rem 0.85rem;
+            border-radius: 8px;
+            font-size: 0.86rem;
+            padding: 8px 12px;
         }
 
         .form-control:focus, .form-select:focus {
-            border-color: var(--primary-accent);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
-        }
-
-        .form-label {
-            font-weight: 600;
-            font-size: 0.84rem;
-            color: #334155;
-            margin-bottom: 0.35rem;
-        }
-
-        /* Custom Buttons */
-        .btn {
-            border-radius: 0.55rem;
-            font-weight: 600;
-            font-size: 0.86rem;
-            padding: 0.55rem 1rem;
-            transition: all 0.2s ease;
-        }
-
-        .btn-primary {
-            background-color: var(--primary-accent);
-            border-color: var(--primary-accent);
-        }
-
-        .btn-primary:hover {
-            background-color: #1d4ed8;
-            border-color: #1d4ed8;
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
-        }
-
-        /* Empty State */
-        .empty-state {
-            padding: 3rem 1.5rem;
-            text-align: center;
-        }
-
-        .empty-state-icon {
-            font-size: 3.5rem;
-            color: #cbd5e1;
-            margin-bottom: 1rem;
+            border-color: #1e40af;
+            box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.15);
         }
     </style>
     @stack('styles')
@@ -256,14 +398,14 @@
         <!-- Footer -->
         <footer class="bg-white border-top py-3 px-4 text-center text-muted small">
             <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
-                <span>&copy; {{ date('Y') }} <strong>LabTrack</strong> — Sistem Peminjaman Alat Laboratorium. UTS Manajemen Sistem Informasi.</span>
-                <span class="text-secondary opacity-75">Laravel {{ app()->version() }} &bull; PHP {{ PHP_VERSION }}</span>
+                <span>&copy; {{ date('Y') }} <strong>LabBorrow</strong> (LabTrack) — Sistem Peminjaman Alat Laboratorium.</span>
+                <span class="text-secondary opacity-75">Laravel {{ app()->version() }} &bull; UTS Praktikum MSI</span>
             </div>
         </footer>
     </div>
 
     <!-- Bootstrap 5.3 Bundle JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- Mobile Sidebar Toggle JS -->
     <script>

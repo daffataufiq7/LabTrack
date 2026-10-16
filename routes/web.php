@@ -3,10 +3,12 @@
 use App\Http\Controllers\AlatController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DendaController;
 use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\MahasiswaController;
 use App\Http\Controllers\MahasiswaPortalController;
 use App\Http\Controllers\PeminjamanController;
+use App\Http\Controllers\PengaturanController;
 use App\Http\Controllers\PengembalianController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -71,6 +73,13 @@ Route::get('/pengembalian/{peminjaman}', [PengembalianController::class, 'form']
 Route::post('/pengembalian/{peminjaman}', [PengembalianController::class, 'process'])->name('pengembalian.process');
 Route::post('/pengembalian/{peminjaman}/bayar', [PengembalianController::class, 'bayarDenda'])->name('pengembalian.bayar');
 
-// Modul 6: Laporan
+// Modul 6: Denda
+Route::get('/denda', [DendaController::class, 'index'])->name('denda.index');
+
+// Modul 7: Laporan
 Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
 Route::get('/laporan/cetak', [LaporanController::class, 'print'])->name('laporan.print');
+
+// Modul 8: Pengaturan
+Route::get('/pengaturan', [PengaturanController::class, 'index'])->name('pengaturan.index');
+Route::post('/pengaturan', [PengaturanController::class, 'update'])->name('pengaturan.update');
