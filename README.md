@@ -4,10 +4,10 @@
 [![PHP Version](https://img.shields.io/badge/PHP-%3E%3D8.2-blue.svg)](https://php.net)
 [![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-purple.svg)](https://getbootstrap.com)
 [![Database](https://img.shields.io/badge/Database-MySQL%20%2F%20MariaDB-orange.svg)](https://mariadb.org)
-[![Tests Passing](https://img.shields.io/badge/Tests-44%20Passed%20(167%20assertions)-brightgreen.svg)]()
+[![Tests Passing](https://img.shields.io/badge/Tests-49%20Passed%20(200%20assertions)-brightgreen.svg)]()
 [![GitHub Repo](https://img.shields.io/badge/GitHub-daffataufiq7%2FLabTrack-blue.svg)](https://github.com/daffataufiq7/LabTrack)
 
-**LabTrack** adalah aplikasi sistem informasi manajemen laboratorium kampus berbasis web (Laravel 12 & MySQL) yang dirancang untuk mengelola inventaris instrumen praktikum, sirkulasi peminjaman dua arah (**Portal Mahasiswa Mandiri** & **Panel Admin Petugas Lab**), verifikasi antrean persetujuan (ACC), pelacakan nomor seri fisik unit (**Tabel Master `alat_unit`**), modul inspeksi pengembalian, serta otomasi perhitungan denda keterlambatan dan kasir penyelesaian ganti rugi kerusakan alat secara terpadu, aman, dan transparan.
+**LabTrack** adalah aplikasi sistem informasi manajemen laboratorium kampus berbasis web (Laravel 12 & MySQL) yang dirancang untuk mengelola inventaris instrumen praktikum, sirkulasi peminjaman dua arah (**Portal Mahasiswa Mandiri** & **Panel Admin Petugas Lab**), verifikasi antrean persetujuan (ACC), pelacakan nomor seri fisik unit (**Tabel Master `alat_unit`**), katalog visual instrumen dengan upload foto alat, modul inspeksi pengembalian, serta otomasi perhitungan denda keterlambatan dan kasir penyelesaian ganti rugi kerusakan alat secara terpadu, aman, dan transparan.
 
 Aplikasi ini dibangun untuk memenuhi spesifikasi lengkap tugas **Ujian Tengah Semester (UTS) Praktikum Manajemen Sistem Informasi**.
 
@@ -26,8 +26,8 @@ Akses URL: `http://127.0.0.1:8000/login`
 
 | Peran | Username | Password | Halaman Masuk | Fitur Utama |
 | :--- | :---: | :---: | :--- | :--- |
-| **Mahasiswa** | `1` | `1` | `/portal/dashboard` | Cek stok ready, ajukan pinjam online, pantau ACC, pantau denda, riwayat transaksi & nota digital |
-| **Admin / Petugas Lab** | `2` | `2` | `/dashboard` | Antrean ACC peminjaman, master mahasiswa, master alat & tracking unit fisik, form pengembalian kasir lab, rekap laporan keuangan |
+| **Mahasiswa** | `1` | `1` | `/portal/dashboard` | Cek katalog visual & stok ready, ajukan pinjam online dengan live preview foto, pantau ACC, pantau denda, riwayat transaksi & nota digital |
+| **Admin / Petugas Lab** | `2` | `2` | `/dashboard` | Antrean ACC peminjaman, master mahasiswa, master alat (upload foto & tracking unit fisik), form pengembalian kasir lab, rekap laporan keuangan |
 
 > **Registrasi Mandiri:** Mahasiswa baru dapat mendaftar langsung melalui tombol **Daftar Akun Mahasiswa Baru** (`/register`). Sistem secara atomik membuat data di tabel `mahasiswa` dan akun di tabel `users`.
 
@@ -36,14 +36,14 @@ Akses URL: `http://127.0.0.1:8000/login`
 ## 📋 Fitur Utama & Keunggulan Sistem
 
 ### 1. Portal Mahasiswa Mandiri (*Self-Service Student Circulation*)
-* **Katalog Stok Ready Transparan:** Menampilkan stok alat yang benar-benar siap dipinjam, membedakan unit yang layak pakai vs unit yang sedang masuk masa karantina perbaikan.
-* **Pengajuan Pinjam Dinamis (Multi-Item):** Mahasiswa dapat memilih tanggal rentang sewa (**Dari Tanggal** s/d **Sampai Tanggal**). Sistem otomatis mencegah pemilihan tanggal sebelum hari ini dan menampilkan kalkulator durasi sewa (*X Hari*).
+* **Katalog Visual & Stok Ready:** Menampilkan banner foto studio resolusi tinggi pada setiap instrumen laboratorium, badge kategori, serta indikator stok alat yang benar-benar siap dipinjam vs unit yang rusak.
+* **Pengajuan Pinjam Dinamis (Multi-Item) dengan Live Photo Preview:** Mahasiswa dapat memilih alat di mana thumbnail gambar alat langsung tampil secara interaktif, memilih rentang sewa (**Dari Tanggal** s/d **Sampai Tanggal**), mencegah pemilihan tanggal masa lalu, serta kalkulator durasi sewa otomatis.
 * **Halaman Riwayat Mahasiswa (`/portal/riwayat`):** Dilengkapi sistem tab interaktif (*Semua, Menunggu ACC, Aktif Dipinjam, Selesai, Ditolak*) dengan fitur batalkan permohonan mandiri jika mahasiswa salah input.
-* **Bukti Nota Digital:** Mahasiswa dapat melihat dan mencetak nota peminjaman ber-barcode yang memuat kode unit fisik resmi yang diterbitkan oleh petugas lab.
+* **Bukti Nota Digital:** Mahasiswa dapat melihat dan mencetak nota peminjaman ber-barcode yang memuat foto alat dan kode unit fisik resmi yang diterbitkan oleh petugas lab.
 
 ### 2. Panel Petugas Laboratorium (Admin)
 * **Antrean Persetujuan (ACC):** Verifikasi permohonan pinjam dari mahasiswa. Pemotongan stok alat dilakukan secara atomik di database hanya saat Admin mengklik tombol **[Setujui / ACC]**.
-* **Manajemen Unit Fisik (`alat_unit`):** Setiap unit fisik instrumen laboratorium memiliki Kode Unit dan Serial Number unik (misal: `ALT-ELK-001-U01`, `ALT-ELK-001-U02`). Admin dapat memantau status setiap unit (*Tersedia, Dipinjam, Rusak, Maintenance*) melalui tombol pop-up modal **[Unit]** pada menu Data Alat.
+* **Master Alat dengan Upload Foto & Manajemen Unit Fisik (`alat_unit`):** Admin dapat mengunggah dokumentasi foto alat lab yang tersimpan rapi di direktori publik, serta memantau setiap unit fisik instrumen laboratorium melalui Kode Unit dan Serial Number unik (misal: `ALT-ELK-001-U01`, `ALT-ELK-001-U02`). Admin dapat memantau status setiap unit (*Tersedia, Dipinjam, Rusak, Maintenance*) melalui tombol pop-up modal **[Unit]** pada menu Data Alat.
 * **Kasir Pengembalian & Restorasi Stok:**
   - Menghitung otomatis denda keterlambatan dengan **masa tenggang 3 hari** dan tarif **Rp 2.000 / hari**.
   - Menginspeksi kondisi fisik alat. Biaya kerusakan dihitung otomatis **Rp 10.000 / unit rusak**.

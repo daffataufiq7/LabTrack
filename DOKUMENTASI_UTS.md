@@ -75,6 +75,7 @@ erDiagram
         string kode_alat UK
         string nama_alat
         string kategori
+        string gambar "Path Foto Produk"
         int stok_total
         int stok_tersedia
         int stok_rusak
@@ -171,32 +172,36 @@ php artisan test
 
 ```text
 PASS Tests\Unit\ExampleTest (1 test)
-PASS Tests\Feature\AlatCrudTest (8 tests)
+PASS Tests\Feature\AlatCrudTest (9 tests)
 PASS Tests\Feature\AuthAndPortalTest (13 tests)
 PASS Tests\Feature\ExampleTest (2 tests)
+PASS Tests\Feature\LivePagesSmokeTest (4 tests)
 PASS Tests\Feature\MahasiswaCrudTest (6 tests)
 PASS Tests\Feature\PeminjamanTest (7 tests)
 PASS Tests\Feature\PengembalianTest (7 tests)
+PASS Tests\Unit\ExampleTest (1 test)
 
-Tests:    44 passed (167 assertions)
-Duration: 1.80s
+Tests:    49 passed (200 assertions)
+Duration: 1.65s
 ```
 
 | ID | Modul / Skenario | Kondisi Masukan | Hasil Sistem | Status |
 | :--- | :--- | :--- | :--- | :--- |
 | **U01** | Auto Unit Generation | Tambah alat total stok 3 | 3 baris `alat_unit` otomatis dibuat (U01-U03) | **BERHASIL** |
-| **U02** | Unit Allocation on Borrow | Pinjam 2 unit | 2 unit berstatus `dipinjam`, kode unit tercatat di nota | **BERHASIL** |
-| **U03** | Unit Isolation on Return | 1 unit dikembalikan rusak | Unit 1 berstatus `rusak`, unit 2 kembali `tersedia` | **BERHASIL** |
-| **U04** | Validasi Tanggal Lampau | Sewa tanggal kemarin | Ditolak: tidak boleh sebelum hari ini | **BERHASIL** |
-| **U05** | Validasi Tanggal Terbalik | Tanggal kembali < mulai | Ditolak: tanggal selesai harus setelah mulai | **BERHASIL** |
-| **U06** | Antrean ACC & Potong Stok | Admin klik Setujui ACC | Status aktif `dipinjam`, stok fisik berkurang atomik | **BERHASIL** |
-| **U07** | Batalkan Pengajuan | Mahasiswa batalkan pending | Status `dibatalkan`, stok alat aman | **BERHASIL** |
-| **U08** | Denda Toleransi 3 Hari | Terlambat 3 hari | Denda Rp0 (bebas denda masa tenggang) | **BERHASIL** |
-| **U09** | Denda Terlambat 5 Hari | Terlambat 5 hari | Denda: $(5-3) \times \text{Rp2.000} = \text{Rp4.000}$ | **BERHASIL** |
-| **U10** | Biaya Ganti Rugi Fisik | 1 unit rusak | Biaya perbaikan Rp10.000, `stok_rusak` + 1 | **BERHASIL** |
-| **U11** | Transaksi Belum Lunas | Denda belum dibayar | Status `belum_lunas` tersimpan di database | **BERHASIL** |
-| **U12** | Pencekalan Peminjam | Mahasiswa menunggak denda | Pengajuan pinjam baru ditolak oleh backend | **BERHASIL** |
-| **U13** | Pelunasan Kasir Lab | Admin klik Pelunasan Denda | Status jadi `lunas`, blokir pinjam mahasiswa terbuka | **BERHASIL** |
+| **U02** | Upload Foto Alat Lab | Unggah file JPG/PNG pada form alat | File tersimpan di `public/images/alat/` & path tercatat di DB | **BERHASIL** |
+| **U03** | Live Preview Foto Pinjam | Pilih alat di dropdown pengajuan | Thumbnail preview foto alat langsung tampil dinamis | **BERHASIL** |
+| **U04** | Unit Allocation on Borrow | Pinjam 2 unit | 2 unit berstatus `dipinjam`, kode unit tercatat di nota | **BERHASIL** |
+| **U05** | Unit Isolation on Return | 1 unit dikembalikan rusak | Unit 1 berstatus `rusak`, unit 2 kembali `tersedia` | **BERHASIL** |
+| **U06** | Validasi Tanggal Lampau | Sewa tanggal kemarin | Ditolak: tidak boleh sebelum hari ini | **BERHASIL** |
+| **U07** | Validasi Tanggal Terbalik | Tanggal kembali < mulai | Ditolak: tanggal selesai harus setelah mulai | **BERHASIL** |
+| **U08** | Antrean ACC & Potong Stok | Admin klik Setujui ACC | Status aktif `dipinjam`, stok fisik berkurang atomik | **BERHASIL** |
+| **U09** | Batalkan Pengajuan | Mahasiswa batalkan pending | Status `dibatalkan`, stok alat aman | **BERHASIL** |
+| **U10** | Denda Toleransi 3 Hari | Terlambat 3 hari | Denda Rp0 (bebas denda masa tenggang) | **BERHASIL** |
+| **U11** | Denda Terlambat 5 Hari | Terlambat 5 hari | Denda: $(5-3) \times \text{Rp2.000} = \text{Rp4.000}$ | **BERHASIL** |
+| **U12** | Biaya Ganti Rugi Fisik | 1 unit rusak | Biaya perbaikan Rp10.000, `stok_rusak` + 1 | **BERHASIL** |
+| **U13** | Transaksi Belum Lunas | Denda belum dibayar | Status `belum_lunas` tersimpan di database | **BERHASIL** |
+| **U14** | Pencekalan Peminjam | Mahasiswa menunggak denda | Pengajuan pinjam baru ditolak oleh backend | **BERHASIL** |
+| **U15** | Pelunasan Kasir Lab | Admin klik Pelunasan Denda | Status jadi `lunas`, blokir pinjam mahasiswa terbuka | **BERHASIL** |
 
 ---
 
