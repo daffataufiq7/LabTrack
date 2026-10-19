@@ -327,3 +327,29 @@ SELECT
     (a.stok_total - (a.stok_tersedia + a.stok_rusak)) AS stok_sedang_dipinjam,
     a.kondisi
 FROM alat a;
+
+-- ---------------------------------------------------------------------
+-- 4c. Tabel Konfigurasi & Pengaturan Sistem Laboratorium
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `pengaturan` (
+    `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `key` VARCHAR(100) NOT NULL UNIQUE,
+    `value` TEXT NULL,
+    `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO `pengaturan` (`key`, `value`) VALUES
+('nama_lab', 'Laboratorium Teknik Informatika'),
+('alamat', 'Jl. Pendidikan No. 1, Kampus Terpadu'),
+('kontak', 'lab@kampus.ac.id'),
+('jam_operasional', 'Senin - Jumat, 07:00 - 18:00 WIB'),
+('maks_hari_pinjam', '7'),
+('denda_per_hari', '2000'),
+('toleransi_hari', '3'),
+('biaya_alat_rusak', '10000'),
+('notif_pengajuan_baru', '1'),
+('notif_jatuh_tempo', '1'),
+('notif_denda', '1'),
+('notif_email_alert', '0')
+ON DUPLICATE KEY UPDATE `value` = VALUES(`value`);

@@ -83,3 +83,7 @@ Route::get('/laporan/cetak', [LaporanController::class, 'print'])->name('laporan
 // Modul 8: Pengaturan
 Route::get('/pengaturan', [PengaturanController::class, 'index'])->name('pengaturan.index');
 Route::post('/pengaturan', [PengaturanController::class, 'update'])->name('pengaturan.update');
+Route::post('/pengaturan/akun', [PengaturanController::class, 'updateAkun'])->name('pengaturan.akun');
+Route::post('/pengaturan/notifikasi', [PengaturanController::class, 'updateNotifikasi'])->name('pengaturan.notifikasi');
+Route::get('/pengaturan/backup/download', [PengaturanController::class, 'backupDownload'])->name('pengaturan.backup.download');
+Route::post('/pengaturan/clear-cache', [PengaturanController::class, 'clearCache'])->name('pengaturan.clear_cache');
