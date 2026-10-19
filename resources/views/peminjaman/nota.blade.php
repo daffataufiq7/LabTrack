@@ -344,9 +344,9 @@
                 <i class="bi bi-cpu"></i>
             </div>
             <div class="kop-teks">
-                <h2>Laboratorium Terpadu Komputer & Instrumentasi</h2>
+                <h2>{{ $labSettings['nama_lab'] ?? 'Laboratorium Terpadu Komputer & Instrumentasi' }}</h2>
                 <h1>LabTrack — Bukti Sirkulasi Peminjaman Alat</h1>
-                <p>Gedung Laboratorium Kampus • Kontak: (0274) 586168 • Email: lab@kampus.ac.id</p>
+                <p>{{ $labSettings['alamat'] ?? 'Gedung Laboratorium Kampus' }} &bull; Kontak: {{ $labSettings['kontak'] ?? 'lab@kampus.ac.id' }} &bull; Jam: {{ $labSettings['jam_operasional'] ?? '08:00 - 17:00' }}</p>
             </div>
         </div>
 

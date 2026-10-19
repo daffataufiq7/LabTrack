@@ -7,7 +7,7 @@
             </div>
             <div>
                 <span class="sidebar-brand-title">Lab Track</span>
-                <span class="sidebar-brand-subtitle">Sistem Peminjaman Alat Laboratorium</span>
+                <span class="sidebar-brand-subtitle text-truncate d-inline-block" style="max-width: 175px;" title="{{ $labSettings['nama_lab'] ?? 'Sistem Peminjaman Alat Laboratorium' }}">{{ $labSettings['nama_lab'] ?? 'Sistem Peminjaman Alat Laboratorium' }}</span>
             </div>
         </a>
         <button type="button" class="btn btn-sm btn-link text-white-50 d-lg-none p-2 me-2" id="sidebarCloseBtn">

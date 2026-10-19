@@ -398,7 +398,7 @@
         <!-- Footer -->
         <footer class="bg-white border-top py-3 px-4 text-center text-muted small">
             <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
-                <span>&copy; {{ date('Y') }} <strong>Lab Track</strong> — Sistem Peminjaman Alat Laboratorium.</span>
+                <span>&copy; {{ date('Y') }} <strong>Lab Track</strong> — {{ $labSettings['nama_lab'] ?? 'Sistem Peminjaman Alat Laboratorium' }}.</span>
                 <span class="text-secondary opacity-75">Laravel {{ app()->version() }} &bull; UTS Praktikum MSI</span>
             </div>
         </footer>

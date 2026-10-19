@@ -13,7 +13,7 @@
         <i class="bi bi-calendar3 text-primary"></i>
         <span>{{ \Carbon\Carbon::now()->isoFormat('D MMMM Y') }}</span>
         <span class="text-muted opacity-50">|</span>
-        <span class="fw-medium text-dark">Laboratorium Teknik Informatika</span>
+        <span class="fw-medium text-dark"><i class="bi bi-building text-primary me-1"></i>{{ $labSettings['nama_lab'] ?? 'Laboratorium Teknik Informatika' }}</span>
     </div>
 </div>
 

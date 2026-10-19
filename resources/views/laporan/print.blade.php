@@ -63,9 +63,9 @@
 
     <!-- Kop Dokumen Resmi -->
     <div class="header-kop">
-        <h4>LABORATORIUM TEKNOLOGI INFORMASI & KOMPUTASI</h4>
+        <h4>{{ strtoupper($labSettings['nama_lab'] ?? 'LABORATORIUM TEKNOLOGI INFORMASI & KOMPUTASI') }}</h4>
         <p>Sistem Manajemen & Sirkulasi Inventaris Alat Laboratorium Terpadu (LabTrack)</p>
-        <p class="small text-muted">Jalan Pendidikan Kampus Terpadu &bull; Telp: (0274) 555-1234 &bull; Email: lab@universitas.ac.id</p>
+        <p class="small text-muted">{{ $labSettings['alamat'] ?? 'Jalan Pendidikan Kampus Terpadu' }} &bull; Kontak: {{ $labSettings['kontak'] ?? 'lab@universitas.ac.id' }} &bull; Jam Operasional: {{ $labSettings['jam_operasional'] ?? '08:00 - 17:00' }}</p>
     </div>
 
     <div class="text-center mb-4">

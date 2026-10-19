@@ -62,6 +62,11 @@ class PengaturanTest extends TestCase
         $this->assertEquals('Gedung TI Lantai 3, Kampus Barat', Pengaturan::get('alamat'));
         $this->assertEquals('rpl_lab@kampus.ac.id', Pengaturan::get('kontak'));
         $this->assertEquals('3000', Pengaturan::get('denda_per_hari'));
+
+        // Verifikasi langsung terlihat di header dashboard
+        $dashboardResponse = $this->actingAs($this->admin)->get(route('dashboard'));
+        $dashboardResponse->assertStatus(200);
+        $dashboardResponse->assertSee('Laboratorium Rekayasa Perangkat Lunak Terpadu');
     }
 
     public function test_can_update_admin_account_and_password(): void
