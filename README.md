@@ -4,7 +4,7 @@
 [![PHP Version](https://img.shields.io/badge/PHP-%3E%3D8.2-blue.svg)](https://php.net)
 [![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-purple.svg)](https://getbootstrap.com)
 [![Database](https://img.shields.io/badge/Database-MySQL%20%2F%20MariaDB-orange.svg)](https://mariadb.org)
-[![Tests Passing](https://img.shields.io/badge/Tests-55%20Passed%20(234%20assertions)-brightgreen.svg)]()
+[![Tests Passing](https://img.shields.io/badge/Tests-59%20Passed%20(254%20assertions)-brightgreen.svg)]()
 [![GitHub Repo](https://img.shields.io/badge/GitHub-daffataufiq7%2FLabTrack-blue.svg)](https://github.com/daffataufiq7/LabTrack)
 
 **LabTrack** adalah aplikasi sistem informasi manajemen laboratorium kampus berbasis web (Laravel 12 & MySQL) yang dirancang untuk mengelola inventaris instrumen praktikum, sirkulasi peminjaman dua arah (**Portal Mahasiswa Mandiri** & **Panel Admin Petugas Lab**), verifikasi antrean persetujuan (ACC), pelacakan nomor seri fisik unit (**Tabel Master `alat_unit`**), katalog visual instrumen dengan upload foto alat, modul inspeksi pengembalian, serta otomasi perhitungan denda keterlambatan dan kasir penyelesaian ganti rugi kerusakan alat secara terpadu, aman, dan transparan.

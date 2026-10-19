@@ -62,6 +62,7 @@ CREATE TABLE IF NOT EXISTS `users` (
     `email_verified_at` TIMESTAMP NULL,
     `password` VARCHAR(255) NOT NULL,
     `role` ENUM('admin', 'mahasiswa') NOT NULL DEFAULT 'mahasiswa',
+    `is_active` TINYINT(1) NOT NULL DEFAULT 1,
     `mahasiswa_id` BIGINT UNSIGNED NULL,
     `remember_token` VARCHAR(100) NULL,
     `created_at` TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,

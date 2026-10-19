@@ -178,12 +178,12 @@ PASS Tests\Feature\ExampleTest (2 tests)
 PASS Tests\Feature\LivePagesSmokeTest (4 tests)
 PASS Tests\Feature\MahasiswaCrudTest (6 tests)
 PASS Tests\Feature\PeminjamanTest (7 tests)
-PASS Tests\Feature\PengaturanTest (6 tests)
+PASS Tests\Feature\PengaturanTest (10 tests)
 PASS Tests\Feature\PengembalianTest (7 tests)
 PASS Tests\Unit\ExampleTest (1 test)
 
-Tests:    55 passed (234 assertions)
-Duration: 6.44s
+Tests:    59 passed (254 assertions)
+Duration: 6.67s
 ```
 
 | ID | Modul / Skenario | Kondisi Masukan | Hasil Sistem | Status |

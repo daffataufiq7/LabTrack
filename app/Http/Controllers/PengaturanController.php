@@ -24,6 +24,19 @@ class PengaturanController extends Controller
         $settings = Pengaturan::getAll();
         $user = Auth::user();
         $activeTab = $request->query('tab', 'profil');
+        $subtab = $request->query('subtab', 'saya');
+        $searchUser = $request->query('cari_user');
+
+        // Query akun mahasiswa
+        $userQuery = User::where('role', 'mahasiswa')->with('mahasiswa')->latest('id');
+        if ($searchUser) {
+            $userQuery->where(function ($q) use ($searchUser) {
+                $q->where('name', 'like', "%{$searchUser}%")
+                  ->orWhere('username', 'like', "%{$searchUser}%")
+                  ->orWhere('email', 'like', "%{$searchUser}%");
+            });
+        }
+        $userMahasiswa = $userQuery->paginate(8)->withQueryString();
 
         // Statistik ringkas untuk tab Backup & Pemeliharaan
         $dbStats = [
@@ -35,7 +48,7 @@ class PengaturanController extends Controller
             'last_backup' => Pengaturan::get('last_backup_time', 'Belum pernah diunduh'),
         ];
 
-        return view('pengaturan.index', compact('settings', 'user', 'activeTab', 'dbStats'));
+        return view('pengaturan.index', compact('settings', 'user', 'activeTab', 'subtab', 'searchUser', 'userMahasiswa', 'dbStats'));
     }
 
     /**
@@ -226,4 +239,73 @@ class PengaturanController extends Controller
         return redirect()->route('pengaturan.index', ['tab' => 'backup'])
             ->with('success', $msg);
     }
+
+    /**
+     * Nonaktifkan atau aktifkan kembali akun pengguna mahasiswa.
+     */
+    public function toggleUserStatus(User $user)
+    {
+        if ($user->isAdmin()) {
+            return redirect()->route('pengaturan.index', ['tab' => 'akun', 'subtab' => 'user'])
+                ->with('error', 'Akun administrator tidak dapat dinonaktifkan.');
+        }
+
+        $user->is_active = !$user->isActive();
+        $user->save();
+
+        $statusStr = $user->isActive() ? 'berhasil diaktifkan kembali' : 'telah dinonaktifkan';
+        return redirect()->route('pengaturan.index', ['tab' => 'akun', 'subtab' => 'user'])
+            ->with('success', "Akun mahasiswa {$user->name} ({$user->username}) {$statusStr}.");
+    }
+
+    /**
+     * Perbarui informasi akun mahasiswa (nama, username/nim, email, reset password, status).
+     */
+    public function updateUser(Request $request, User $user)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:100',
+            'username' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique('users', 'username')->ignore($user->id),
+            ],
+            'email' => [
+                'nullable',
+                'email',
+                'max:150',
+                Rule::unique('users', 'email')->ignore($user->id),
+            ],
+            'password' => 'nullable|string|min:4',
+            'is_active' => 'nullable|in:0,1',
+        ], [
+            'username.unique' => 'Username/NIM sudah terdaftar untuk pengguna lain.',
+            'email.unique' => 'Email sudah terdaftar untuk pengguna lain.',
+            'password.min' => 'Kata sandi minimal 4 karakter.',
+        ]);
+
+        $user->name = $validated['name'];
+        $user->username = $validated['username'];
+        $user->email = $validated['email'] ?? null;
+        $user->is_active = $request->input('is_active', '1') == '1';
+
+        if (!empty($validated['password'])) {
+            $user->password = Hash::make($validated['password']);
+        }
+
+        $user->save();
+
+        // Sinkronisasi ke data master mahasiswa jika berelasi
+        if ($user->mahasiswa) {
+            $user->mahasiswa->update([
+                'nama' => $validated['name'],
+                'nim' => $validated['username'],
+            ]);
+        }
+
+        return redirect()->route('pengaturan.index', ['tab' => 'akun', 'subtab' => 'user'])
+            ->with('success', "Informasi akun mahasiswa {$user->name} berhasil diperbarui.");
+    }
 }
+

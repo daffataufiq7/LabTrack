@@ -42,9 +42,18 @@ class AuthController extends Controller
 
         // Coba login via username / NIM
         if (Auth::attempt(['username' => $credentials['username'], 'password' => $credentials['password']], $remember)) {
+            $user = Auth::user();
+
+            if (!$user->isActive()) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+                return back()->withInput($request->only('username', 'remember'))
+                    ->with('error', 'Akun Anda dinonaktifkan oleh Petugas Laboratorium. Silakan hubungi pengelola lab untuk mengaktifkan kembali.');
+            }
+
             $request->session()->regenerate();
 
-            $user = Auth::user();
             if ($user->isAdmin()) {
                 return redirect()->intended(route('dashboard'))
                     ->with('success', "Selamat datang, {$user->name} (Petugas Lab)!");
@@ -56,9 +65,18 @@ class AuthController extends Controller
 
         // Coba alternatif login via email
         if (Auth::attempt(['email' => $credentials['username'], 'password' => $credentials['password']], $remember)) {
+            $user = Auth::user();
+
+            if (!$user->isActive()) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+                return back()->withInput($request->only('username', 'remember'))
+                    ->with('error', 'Akun Anda dinonaktifkan oleh Petugas Laboratorium. Silakan hubungi pengelola lab untuk mengaktifkan kembali.');
+            }
+
             $request->session()->regenerate();
 
-            $user = Auth::user();
             if ($user->isAdmin()) {
                 return redirect()->intended(route('dashboard'))
                     ->with('success', "Selamat datang, {$user->name} (Petugas Lab)!");

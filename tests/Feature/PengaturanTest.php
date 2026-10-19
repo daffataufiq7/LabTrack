@@ -123,4 +123,100 @@ class PengaturanTest extends TestCase
         $response->assertRedirect(route('pengaturan.index', ['tab' => 'backup']));
         $response->assertSessionHas('success');
     }
+
+    public function test_can_view_student_user_accounts_list(): void
+    {
+        $student = User::create([
+            'name' => 'Budi Pratama',
+            'username' => '230101999',
+            'email' => 'budi_test@kampus.ac.id',
+            'password' => Hash::make('1'),
+            'role' => 'mahasiswa',
+            'is_active' => true,
+        ]);
+
+        $response = $this->actingAs($this->admin)->get(route('pengaturan.index', ['tab' => 'akun', 'subtab' => 'user']));
+
+        $response->assertStatus(200);
+        $response->assertSee('Budi Pratama');
+        $response->assertSee('230101999');
+        $response->assertSee('Kelola Akun User Mahasiswa');
+    }
+
+    public function test_can_toggle_deactivate_and_activate_student_user(): void
+    {
+        $student = User::create([
+            'name' => 'Siti Aisyah',
+            'username' => '230101888',
+            'email' => 'siti_test@kampus.ac.id',
+            'password' => Hash::make('1'),
+            'role' => 'mahasiswa',
+            'is_active' => true,
+        ]);
+
+        // Nonaktifkan
+        $response = $this->actingAs($this->admin)->post(route('pengaturan.users.toggle', $student->id));
+        $response->assertRedirect(route('pengaturan.index', ['tab' => 'akun', 'subtab' => 'user']));
+        $response->assertSessionHas('success');
+
+        $student->refresh();
+        $this->assertFalse($student->isActive());
+
+        // Aktifkan kembali
+        $response2 = $this->actingAs($this->admin)->post(route('pengaturan.users.toggle', $student->id));
+        $response2->assertRedirect(route('pengaturan.index', ['tab' => 'akun', 'subtab' => 'user']));
+
+        $student->refresh();
+        $this->assertTrue($student->isActive());
+    }
+
+    public function test_can_update_student_user_info_and_password(): void
+    {
+        $student = User::create([
+            'name' => 'Ahmad Dani',
+            'username' => '230101777',
+            'email' => 'ahmad_old@kampus.ac.id',
+            'password' => Hash::make('old_pass'),
+            'role' => 'mahasiswa',
+            'is_active' => true,
+        ]);
+
+        $payload = [
+            'name' => 'Ahmad Dani Setyawan',
+            'username' => '230101777',
+            'email' => 'ahmad_new@kampus.ac.id',
+            'password' => 'new_pass_456',
+            'is_active' => '0',
+        ];
+
+        $response = $this->actingAs($this->admin)->put(route('pengaturan.users.update', $student->id), $payload);
+        $response->assertRedirect(route('pengaturan.index', ['tab' => 'akun', 'subtab' => 'user']));
+        $response->assertSessionHas('success');
+
+        $student->refresh();
+        $this->assertEquals('Ahmad Dani Setyawan', $student->name);
+        $this->assertEquals('ahmad_new@kampus.ac.id', $student->email);
+        $this->assertFalse($student->isActive());
+        $this->assertTrue(Hash::check('new_pass_456', $student->password));
+    }
+
+    public function test_deactivated_student_cannot_login(): void
+    {
+        User::create([
+            'name' => 'User Nonaktif',
+            'username' => '230101666',
+            'password' => Hash::make('password123'),
+            'role' => 'mahasiswa',
+            'is_active' => false,
+        ]);
+
+        $response = $this->post(route('login.post'), [
+            'username' => '230101666',
+            'password' => 'password123',
+        ]);
+
+        $this->assertGuest();
+        $response->assertSessionHas('error');
+    }
 }
+
