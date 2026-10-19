@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'LabBorrow') — Sistem Peminjaman Alat Laboratorium</title>
+    <title>@yield('title', 'Lab Track') — Sistem Peminjaman Alat Laboratorium</title>
 
     <!-- Google Fonts: Plus Jakarta Sans & Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -398,7 +398,7 @@
         <!-- Footer -->
         <footer class="bg-white border-top py-3 px-4 text-center text-muted small">
             <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center gap-2">
-                <span>&copy; {{ date('Y') }} <strong>LabBorrow</strong> (LabTrack) — Sistem Peminjaman Alat Laboratorium.</span>
+                <span>&copy; {{ date('Y') }} <strong>Lab Track</strong> — Sistem Peminjaman Alat Laboratorium.</span>
                 <span class="text-secondary opacity-75">Laravel {{ app()->version() }} &bull; UTS Praktikum MSI</span>
             </div>
         </footer>

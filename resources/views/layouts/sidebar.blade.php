@@ -6,7 +6,7 @@
                 <i class="bi bi-funnel"></i>
             </div>
             <div>
-                <span class="sidebar-brand-title">LabBorrow</span>
+                <span class="sidebar-brand-title">Lab Track</span>
                 <span class="sidebar-brand-subtitle">Sistem Peminjaman Alat Laboratorium</span>
             </div>
         </a>
