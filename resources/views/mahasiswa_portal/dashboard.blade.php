@@ -6,23 +6,24 @@
 
 @section('content')
 <!-- Header Profil & Quick Actions -->
-<div class="card shadow-sm border-0 mb-4 bg-gradient" style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);">
-    <div class="card-body p-4 text-white">
+<div class="card shadow-sm border-0 mb-4 overflow-hidden" style="background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 55%, #2563eb 100%) !important; color: #ffffff !important;">
+    <div class="card-body p-4 position-relative">
         <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
             <div class="d-flex align-items-center gap-3">
-                <div class="bg-white bg-opacity-20 rounded-circle p-3 d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                <div class="rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 60px; height: 60px; background: rgba(255, 255, 255, 0.2); border: 2px solid rgba(255, 255, 255, 0.4); color: #ffffff;">
                     <i class="bi bi-mortarboard-fill fs-2"></i>
                 </div>
                 <div>
-                    <h5 class="fw-bold mb-1">{{ $mahasiswa->nama }}</h5>
-                    <div class="small text-white-50">
-                        NIM: <span class="font-monospace text-white fw-semibold">{{ $mahasiswa->nim }}</span> &bull; 
-                        Program Studi: <span class="text-white fw-semibold">{{ $mahasiswa->program_studi }}</span>
+                    <h4 class="fw-bold mb-1" style="color: #ffffff !important; letter-spacing: -0.3px;">{{ $mahasiswa->nama }}</h4>
+                    <div class="small" style="color: rgba(255, 255, 255, 0.9) !important;">
+                        NIM: <span class="font-monospace fw-semibold px-2 py-0.5 rounded" style="background: rgba(255, 255, 255, 0.2); color: #ffffff;">{{ $mahasiswa->nim }}</span> 
+                        <span class="mx-1">&bull;</span>
+                        Program Studi: <span class="fw-semibold" style="color: #ffffff !important;">{{ $mahasiswa->program_studi }}</span>
                     </div>
                 </div>
             </div>
             <div class="d-flex gap-2 flex-wrap">
-                <a href="{{ route('mahasiswa.portal.riwayat') }}" class="btn btn-sm btn-outline-light px-3 shadow-sm">
+                <a href="{{ route('mahasiswa.portal.riwayat') }}" class="btn btn-sm px-3 shadow-sm" style="background: rgba(255, 255, 255, 0.15); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.35);">
                     <i class="bi bi-clock-history me-1"></i> Riwayat & Status ACC
                 </a>
                 <a href="{{ route('mahasiswa.portal.katalog') }}" class="btn btn-sm btn-light text-primary fw-semibold px-3 shadow-sm">
