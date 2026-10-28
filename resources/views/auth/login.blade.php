@@ -297,22 +297,12 @@
                     </button>
                 </form>
 
-                <!-- Panel Uji Coba Cepat (UTS Demo Helper) -->
-                <div class="quick-demo-box">
-                    <div class="d-flex align-items-center justify-content-between mb-2">
-                        <small class="fw-bold text-secondary" style="font-size: 0.72rem;">UJI COBA DEMO CEPAT:</small>
-                        <a href="{{ route('register') }}" class="text-decoration-none fw-semibold text-primary" style="font-size: 0.75rem;">
-                            Daftar Mahasiswa <i class="bi bi-arrow-right"></i>
-                        </a>
-                    </div>
-                    <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-sm btn-outline-secondary flex-grow-1" style="font-size: 0.78rem;" onclick="fillLogin('2', '2')">
-                            <i class="bi bi-shield-lock me-1"></i> Admin (2 / 2)
-                        </button>
-                        <button type="button" class="btn btn-sm btn-outline-secondary flex-grow-1" style="font-size: 0.78rem;" onclick="fillLogin('1', '1')">
-                            <i class="bi bi-mortarboard me-1"></i> Mhs (1 / 1)
-                        </button>
-                    </div>
+                <!-- Link Registrasi Mahasiswa Standar -->
+                <div class="text-center mt-3">
+                    <span class="text-secondary small" style="font-size: 0.82rem;">Belum memiliki akun?</span>
+                    <a href="{{ route('register') }}" class="text-decoration-none fw-semibold text-primary small ms-1" style="font-size: 0.82rem;">
+                        Daftar Mahasiswa <i class="bi bi-arrow-right"></i>
+                    </a>
                 </div>
 
                 <div class="login-footer-copy">
@@ -338,12 +328,6 @@
                     toggleIcon.classList.replace('bi-eye-slash', 'bi-eye');
                 }
             });
-        }
-
-        // Quick login fill
-        function fillLogin(u, p) {
-            document.getElementById('username').value = u;
-            document.getElementById('password').value = p;
         }
     </script>
 </body>

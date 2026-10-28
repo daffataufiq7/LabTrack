@@ -305,34 +305,48 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // 4. Data Akun Pengguna (Users Login)
-        // Admin: Username '2', Password '2'
+        // Admin: Username 'adminlab1@labtrack.uny', Password '123'
         User::create([
             'name' => 'Petugas Laboratorium',
-            'username' => '2',
-            'email' => 'admin@labtrack.ac.id',
-            'password' => Hash::make('2'),
+            'username' => 'adminlab1@labtrack.uny',
+            'email' => 'adminlab1@labtrack.uny',
+            'password' => Hash::make('123'),
             'role' => 'admin',
             'mahasiswa_id' => null,
+            'is_active' => true,
         ]);
 
-        // Mahasiswa: Username '1', Password '1' (Terhubung ke Ahmad Fajar Pratama)
+        // Mahasiswa: Mitchel Artica
         User::create([
-            'name' => 'Ahmad Fajar Pratama',
-            'username' => '1',
-            'email' => 'ahmad@student.uny.ac.id',
-            'password' => Hash::make('1'),
+            'name' => 'Mitchel Artica',
+            'username' => 'mitchelartica@labtrack.uny',
+            'email' => 'mitchelartica@labtrack.uny',
+            'password' => Hash::make('123'),
             'role' => 'mahasiswa',
-            'mahasiswa_id' => $mahasiswaModels[0]->id,
+            'mahasiswa_id' => $mahasiswaModels[0]->id ?? null,
+            'is_active' => true,
         ]);
 
-        // Akun Mahasiswa 2 (Siti Nur Aisyah)
+        // Mahasiswa: Pramudya Tien Meylandri
         User::create([
-            'name' => 'Siti Nur Aisyah',
-            'username' => '22051204015',
-            'email' => 'siti@student.uny.ac.id',
-            'password' => Hash::make('123456'),
+            'name' => 'Pramudya Tien Meylandri',
+            'username' => 'pramudyatienmeylandri@labtrack.uny',
+            'email' => 'pramudyatienmeylandri@labtrack.uny',
+            'password' => Hash::make('123'),
             'role' => 'mahasiswa',
-            'mahasiswa_id' => $mahasiswaModels[1]->id,
+            'mahasiswa_id' => $mahasiswaModels[1]->id ?? null,
+            'is_active' => true,
+        ]);
+
+        // Mahasiswa: Daffa Taufiqurahman
+        User::create([
+            'name' => 'Daffa Taufiqurahman',
+            'username' => 'daffataufiq@labtrack.uny',
+            'email' => 'daffataufiq@labtrack.uny',
+            'password' => Hash::make('123'),
+            'role' => 'mahasiswa',
+            'mahasiswa_id' => $mahasiswaModels[2]->id ?? null,
+            'is_active' => true,
         ]);
     }
 }

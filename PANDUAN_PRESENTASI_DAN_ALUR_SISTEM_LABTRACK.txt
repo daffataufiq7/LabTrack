@@ -180,19 +180,19 @@ FASE 4: AUDIT, LAPORAN, & PENGATURAN LAB
 4. Backup Database SQL: Mengunduh file backup SQL langsung dari website hanya satu klik.
 
 ================================================================================
-5. DAFTAR AKUN DEMO PENGUJIAN
+5. DAFTAR AKUN LOGIN RESMI
 ================================================================================
 
-+------------------------+-------------------------+----------+--------------------+
-| Peran (Role)           | Username / ID           | Password | Email              |
-+------------------------+-------------------------+----------+--------------------+
-| Petugas Lab (Admin)    | 2                       | 2        | admin@labtrack.ac.id|
-| Mahasiswa Utama        | 1                       | 1        | ahmad@student.uny.ac.id |
-| Mahasiswa Alternatif   | 22051204015             | 123456   | siti@student.uny.ac.id |
-+------------------------+-------------------------+----------+--------------------+
++------------------------+---------------------------------------+----------+
+| Peran (Role)           | Username / Email                      | Password |
++------------------------+---------------------------------------+----------+
+| Petugas Lab (Admin)    | adminlab1@labtrack.uny                | 123      |
+| Mahasiswa 1            | mitchelartica@labtrack.uny            | 123      |
+| Mahasiswa 2            | pramudyatienmeylandri@labtrack.uny    | 123      |
+| Mahasiswa 3            | daffataufiq@labtrack.uny              | 123      |
++------------------------+---------------------------------------+----------+
 
-*Catatan: Pada halaman login sudah disediakan tombol cepat (Quick Fill) untuk
-mengisi akun admin atau mahasiswa secara instan tanpa perlu mengetik manual.
+*Catatan: Login mendukung input berupa Username maupun Email resmi di atas.
 
 ================================================================================
 6. NASKAH LENGKAP PRESENTASI MAHASISWA (SCRIPT SIAP BACA)
@@ -233,7 +233,8 @@ manajemen stok fisik, dan kasir audit keuangan."
 --- [SLIDE 4: DEMO SISTEM - FASE PENGAJUAN MAHASISWA] ---
 (Buka halaman login di browser: http://127.0.0.1:8000)
 "Sekarang mari kita demonstrasikan langsung alur kerjanya:
-Pertama, kita login sebagai Mahasiswa menggunakan akun demo: Username 1, Password 1.
+Pertama, kita login sebagai Mahasiswa menggunakan akun:
+Username: mitchelartica@labtrack.uny, Password: 123.
 
 Setelah masuk ke Portal Mahasiswa, mahasiswa dapat membuka menu 'Katalog Alat'.
 Di sini mahasiswa dapat melihat foto alat, spesifikasi, dan stok unit yang Ready.
@@ -245,7 +246,7 @@ Setelah disimpan, status transaksi adalah 'Menunggu ACC'. Pada tahap ini, stok
 fisik di lab belum berkurang karena belum diverifikasi oleh petugas."
 
 --- [SLIDE 5: DEMO SISTEM - FASE VERIFIKASI ADMIN] ---
-(Logout, lalu login sebagai Admin: Username 2, Password 2)
+(Logout, lalu login sebagai Admin: Username adminlab1@labtrack.uny, Password 123)
 "Sekarang kita berpindah ke Portal Petugas Lab.
 Di Dashboard Admin, petugas disuguhkan statistik inventaris dan notifikasi antrean.
 Petugas membuka menu 'Antrean ACC Peminjaman'.
