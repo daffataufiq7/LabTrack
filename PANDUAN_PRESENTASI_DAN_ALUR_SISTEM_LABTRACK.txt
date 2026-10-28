@@ -1,0 +1,336 @@
+================================================================================
+          PANDUAN LENGKAP SISTEM, ALUR SIRKULASI, & SCRIPT PRESENTASI UTS
+                    LABTRACK - INTEGRATED LABORATORY CIRCULATION
+================================================================================
+Mata Kuliah   : Praktikum Manajemen Sistem Informasi (MSI) - Semester 5
+Studi Kasus   : Soal 1 - Sistem Peminjaman Alat Laboratorium
+Aplikasi      : LabTrack (Two-Sided Campus Laboratory Circulation System)
+Pengembang    : Daffa Taufiq & Mitchel
+Repositori    : https://github.com/daffataufiq7/LabTrack
+Tanggal Rilis : Oktober 2026
+================================================================================
+
+DAFTAR ISI:
+1. IDENTITAS & ARSITEKTUR TEKNOLOGI (TECH STACK)
+2. STRUKTUR BASIS DATA & TABEL MASTER UNIT FISIK
+3. ATURAN BISNIS SIRKULASI & RUMUS KHUSUS UTS
+4. ALUR SISTEM END-TO-END (LANGKAH DEMI LANGKAH)
+5. DAFTAR AKUN DEMO PENGUJIAN
+6. NASKAH LENGKAP PRESENTASI MAHASISWA (SCRIPT SIAP BACA)
+7. PERSIAPAN TANYA JAWAB DOSEN (FAQ TEKNIS & KONSEPTUAL)
+
+================================================================================
+1. IDENTITAS & ARSITEKTUR TEKNOLOGI (TECH STACK)
+================================================================================
+Jika dosen bertanya mengenai teknologi yang dipakai, jelaskan poin berikut:
+
+A. BACKEND & FRAMEWORK
+- Framework Utama : Laravel 12 (versi terbaru ekosistem PHP)
+- Bahasa Pemrograman : PHP 8.2+ (Typed properties, Arrow functions, Match expressions)
+- Pola Arsitektur   : MVC (Model - View - Controller)
+  * Model      : Menangani logika data dan relasi menggunakan Eloquent ORM.
+  * View       : Antarmuka dinamis berbasis Blade Templating Engine.
+  * Controller : Mengatur alur logika bisnis, validasi form, dan HTTP response.
+- Keamanan (Security):
+  * CSRF Protection pada setiap form submission (@csrf token).
+  * Password Hashing menggunakan Bcrypt 12 Rounds.
+  * Pencegahan SQL Injection menggunakan PDO Prepared Statements (Eloquent).
+  * Role-Based Access Control (RBAC) memisahkan akses 'admin' dan 'mahasiswa'.
+
+B. BASIS DATA (DATABASE)
+- RDBMS          : MySQL 8.0 / MariaDB 10.4
+- Storage Engine : InnoDB (Mendukung transaksi ACID dan Foreign Key Relasional)
+- Fitur Kunci:
+  * Foreign Key Constraint dengan aksi Cascade / Restrict.
+  * Row-Level Locking (lockForUpdate) pada saat pemotongan stok untuk
+    mencegah Race Condition (kondisi berebut alat di detik yang sama).
+  * SQL Database Views (view_audit_inventaris_lab, view_peminjaman_terlambat,
+    view_rekap_keuangan) untuk komputasi analitik cepat.
+
+C. FRONTEND & USER INTERFACE
+- Framework CSS  : Bootstrap 5.3 (via CDN) + Custom Modern Vanilla CSS.
+- Desain Visual  : Modern Glassmorphism & Slate Navy Blue.
+- Tipografi      : Google Fonts (Plus Jakarta Sans & Inter).
+- Icon Pack      : Bootstrap Icons (v1.11.3).
+- Visualisasi Data : Chart.js untuk grafik interaktif tren sirkulasi & kondisi alat.
+
+D. PENGUJIAN OTOMATIS (AUTOMATED TESTING)
+- Test Suite     : PHPUnit 11
+- Hasil Verifikasi : 59 Automated Tests (254 Assertions) - 100% PASS
+  (Mencakup Unit Test & Feature Test dari login, transaksi, hingga denda).
+
+================================================================================
+2. STRUKTUR BASIS DATA & TABEL MASTER UNIT FISIK
+================================================================================
+Sistem dibangun di atas 6 tabel utama yang saling berelasi:
+
+1. USERS
+   - Menyimpan akun login autentikasi.
+   - Kolom: id, name, username, email, password, role ('admin'/'mahasiswa'),
+     mahasiswa_id, is_active.
+
+2. MAHASISWA
+   - Menyimpan data master profil mahasiswa.
+   - Kolom: id, nim, nama, program_studi, no_hp.
+
+3. ALAT
+   - Menyimpan katalog jenis instrumen lab.
+   - Kolom: id, kode_alat, nama_alat, kategori, gambar, stok_total,
+     stok_tersedia, stok_rusak, kondisi.
+
+4. ALAT_UNIT (FITUR UNGGULAN PELACAKAN FISIK)
+   - Menyimpan identitas setiap unit fisik instrumen secara individual.
+   - Kolom: id, alat_id, kode_unit (contoh: ALT-ELK-001-U01), nomor_seri (barcode pabrik),
+     status ('tersedia', 'dipinjam', 'rusak', 'maintenance'), kondisi,
+     peminjaman_id, catatan.
+
+5. PEMINJAMAN
+   - Menyimpan header transaksi sirkulasi lab.
+   - Kolom: id, kode_transaksi, mahasiswa_id, tanggal_pinjam,
+     tanggal_jatuh_tempo, tanggal_kembali, status ('menunggu_acc', 'dipinjam',
+     'dikembalikan', 'ditolak', 'dibatalkan'), total_denda, total_biaya_perbaikan,
+     status_pembayaran ('lunas', 'belum_lunas'), metode_pembayaran,
+     waktu_pembayaran, catatan_admin, approved_at.
+
+6. DETAIL_PEMINJAMAN
+   - Menyimpan rincian item alat yang dipinjam dalam satu nomor transaksi.
+   - Kolom: id, peminjaman_id, alat_id, jumlah, kode_unit_dipinjam,
+     kondisi_kembali, biaya_perbaikan.
+
+================================================================================
+3. ATURAN BISNIS SIRKULASI & RUMUS KHUSUS UTS
+================================================================================
+
+A. ATURAN PERHITUNGAN DENDA KETERLAMBATAN (SOAL 1 UTS):
+   - Hari Terlambat = Tanggal Kembali - Tanggal Jatuh Tempo
+   - Masa Tenggang (Grace Period) = 3 Hari.
+   - Hari Kena Denda = max(0, Hari Terlambat - 3)
+   - Total Denda = Hari Kena Denda x Rp 2.000 / hari
+   
+   Contoh Kasus:
+   * Terlambat 1, 2, atau 3 hari -> Denda Rp 0 (Masih dalam masa toleransi).
+   * Terlambat 4 hari -> Kena denda 1 hari = 1 x Rp 2.000 = Rp 2.000.
+   * Terlambat 5 hari -> Kena denda 2 hari = 2 x Rp 2.000 = Rp 4.000.
+
+B. ATURAN GANTI RUGI KERUSAKAN ALAT:
+   - Biaya perbaikan unit rusak = Rp 10.000 per unit fisik.
+   - Isolasi Unit Rusak: Unit yang kembali dalam kondisi rusak TIDAK dikembalikan
+     ke stok tersedia, melainkan dipindahkan ke 'stok_rusak' dan status unitnya
+     menjadi 'rusak' agar tidak bisa dipinjam oleh mahasiswa lain sebelum diperbaiki.
+
+C. METODE PEMBAYARAN KASIR LAB:
+   - Jika Tagihan Rp 0 (Tepat waktu & alat baik): Status otomatis 'LUNAS'.
+   - Jika Ada Tagihan (Denda / Kerusakan):
+     1. Bayar Langsung : Kasir memilih Tunai / QRIS / Transfer Bank -> Status 'LUNAS'.
+     2. Belum Lunas    : Kasir memilih 'Belum Lunas' -> Transaksi berstatus menunggak.
+
+D. ATURAN PENCEKALAN (PENALTI BLACKLIST):
+   - Mahasiswa yang memiliki riwayat pinjaman berstatus 'belum_lunas' SECARA
+     OTOMATIS DIBLOKIR oleh sistem dari membuat pengajuan pinjaman baru.
+   - Blokir langsung terbuka seketika setelah Admin mengklik 'Konfirmasi Pelunasan'
+     di meja laboratorium.
+
+================================================================================
+4. ALUR SISTEM END-TO-END (LANGKAH DEMI LANGKAH)
+================================================================================
+
+FASE 1: PENGAJUAN PINJAMAN (SISI MAHASISWA)
+1. Mahasiswa login ke aplikasi melalui /login menggunakan NIM atau Email.
+2. Membuka menu 'Katalog Alat' untuk melihat spesifikasi, foto alat, dan
+   stok unit fisik yang berstatus Ready.
+3. Mengklik tombol 'Ajukan Pinjam':
+   - Memilih rentang tanggal (Dari Tanggal s/d Sampai Tanggal).
+   - Validasi backend otomatis mencegah tanggal lampau dan tanggal terbalik.
+   - Memilih jenis alat dan jumlah yang dibutuhkan (maks 10 unit).
+4. Transaksi tersimpan dengan status 'menunggu_acc'.
+   *Catatan penting: Stok fisik belum dipotong pada tahap ini.*
+
+FASE 2: VERIFIKASI & ALOKASI STOK (SISI PETUGAS LAB / ADMIN)
+1. Petugas lab membuka menu 'Antrean ACC Peminjaman'.
+2. Petugas melihat rincian mahasiswa, tujuan penggunaan, dan ketersediaan alat.
+3. Opsi Verifikasi:
+   A. Jika Ditolak: Transaksi ditolak disertai catatan tertulis bagi mahasiswa.
+   B. Jika Disetujui (ACC):
+      - Sistem mengunci row data (Row-Level Locking).
+      - Unit fisik berstatus 'tersedia' dari tabel alat_unit dialokasikan menjadi
+        'dipinjam' (misal: unit U01, U02).
+      - Nomor unit fisik dicatat di nota peminjaman.
+      - Stok tersedia di tabel alat berkurang secara atomik.
+4. Mahasiswa dapat mencetak 'Nota Bukti Peminjaman Digital' berbarcode.
+
+FASE 3: PENGEMBALIAN & KASIR LAB (SISI PETUGAS LAB)
+1. Mahasiswa menyerahkan instrumen fisik ke meja laboratorium.
+2. Petugas membuka menu 'Pengembalian Alat' dan memilih transaksi mahasiswa.
+3. Petugas menginspeksi fisik alat per unit:
+   - Memilih kondisi: 'Baik' atau 'Rusak'.
+4. Sistem secara otomatis melakukan kalkulasi real-time:
+   - Menghitung hari terlambat & denda toleransi 3 hari.
+   - Menghitung biaya kerusakan (Rp10.000 / unit rusak).
+5. Penyelesaian Kasir:
+   - Pilih metode bayar jika mahasiswa membayar di tempat.
+   - Pilih 'Belum Lunas' jika mahasiswa menunggak biaya.
+6. Restorasi Stok:
+   - Unit berstatus baik kembali ke stok tersedia.
+   - Unit berstatus rusak masuk karantina perbaikan.
+
+FASE 4: AUDIT, LAPORAN, & PENGATURAN LAB
+1. Laporan Rekap Keuangan: Merekapitulasi total kas masuk dari denda dan biaya servis.
+2. Pengaturan Profil Lab: Mengubah nama lab, kepala lab, NIP, kontak, dan logo lab.
+3. Manajemen Akun: Mengaktifkan/menonaktifkan akun user mahasiswa dan reset kata sandi.
+4. Backup Database SQL: Mengunduh file backup SQL langsung dari website hanya satu klik.
+
+================================================================================
+5. DAFTAR AKUN DEMO PENGUJIAN
+================================================================================
+
++------------------------+-------------------------+----------+--------------------+
+| Peran (Role)           | Username / ID           | Password | Email              |
++------------------------+-------------------------+----------+--------------------+
+| Petugas Lab (Admin)    | 2                       | 2        | admin@labtrack.ac.id|
+| Mahasiswa Utama        | 1                       | 1        | ahmad@student.uny.ac.id |
+| Mahasiswa Alternatif   | 22051204015             | 123456   | siti@student.uny.ac.id |
++------------------------+-------------------------+----------+--------------------+
+
+*Catatan: Pada halaman login sudah disediakan tombol cepat (Quick Fill) untuk
+mengisi akun admin atau mahasiswa secara instan tanpa perlu mengetik manual.
+
+================================================================================
+6. NASKAH LENGKAP PRESENTASI MAHASISWA (SCRIPT SIAP BACA)
+================================================================================
+
+--- [SLIDE 1: PEMBUKAAN & IDENTITAS] ---
+"Selamat pagi/siang kepada Bapak/Ibu Dosen Penguji dan teman-teman sekalian.
+Terima kasih atas waktu dan kesempatannya.
+
+Pada hari ini, kami akan mempresentasikan sistem yang telah kami kembangkan untuk
+memenuhi Ujian Tengah Semester mata kuliah Praktikum Manajemen Sistem Informasi,
+yaitu 'LabTrack — Integrated Campus Laboratory Circulation System', yang mengambil
+Studi Kasus Soal 1: Sistem Peminjaman Alat Laboratorium."
+
+--- [SLIDE 2: LATAR BELAKANG & TUJUAN] ---
+"Latar belakang dibuatnya LabTrack adalah karena sistem peminjaman lab konvensional
+masih bertumpu pada pencatatan buku besar kertas. Masalah utamanya adalah:
+1. Selisih stok fisik instrumen laboratorium yang sering tidak cocok.
+2. Nomor seri unit fisik tidak terlacak, sehingga jika alat rusak di meja mahasiswa,
+   petugas kesulitan mengidentifikasi unit yang mana.
+3. Perhitungan denda keterlambatan yang rawan salah hitung secara manual.
+4. Kurangnya transparansi status denda bagi mahasiswa.
+
+Oleh karena itu, LabTrack kami rancang sebagai sistem terintegrasi dua sisi:
+Portal Mahasiswa untuk pengajuan mandiri dan Portal Petugas Lab untuk verifikasi ACC,
+manajemen stok fisik, dan kasir audit keuangan."
+
+--- [SLIDE 3: TEKNOLOGI & ARSITEKTUR] ---
+"Secara arsitektur, aplikasi ini kami bangun dengan standar modern:
+- Backend: Framework Laravel 12 berbasis PHP 8.2 dengan pola MVC.
+- Database: MySQL InnoDB yang mendukung integritas relasional berjenjang,
+  Database Transactions, dan Row-Level Locking saat pemotongan stok.
+- Frontend: Blade Template Engine yang dipadukan dengan Bootstrap 5.3 CDN,
+  Google Fonts Plus Jakarta Sans, dan Chart.js untuk visualisasi grafik.
+- Kualitas Sistem: Kami telah menyertakan 59 Automated Tests menggunakan PHPUnit
+  dan seluruhnya lulus 100% tanpa ada error."
+
+--- [SLIDE 4: DEMO SISTEM - FASE PENGAJUAN MAHASISWA] ---
+(Buka halaman login di browser: http://127.0.0.1:8000)
+"Sekarang mari kita demonstrasikan langsung alur kerjanya:
+Pertama, kita login sebagai Mahasiswa menggunakan akun demo: Username 1, Password 1.
+
+Setelah masuk ke Portal Mahasiswa, mahasiswa dapat membuka menu 'Katalog Alat'.
+Di sini mahasiswa dapat melihat foto alat, spesifikasi, dan stok unit yang Ready.
+Saat mahasiswa mengklik 'Ajukan Pinjaman', sistem mewajibkan mahasiswa memilih
+rentang tanggal sewa. Di sini kami menyematkan validasi ketat: sistem menolak jika
+mahasiswa memilih tanggal masa lalu atau jika tanggal selesai lebih awal dari tanggal mulai.
+
+Setelah disimpan, status transaksi adalah 'Menunggu ACC'. Pada tahap ini, stok
+fisik di lab belum berkurang karena belum diverifikasi oleh petugas."
+
+--- [SLIDE 5: DEMO SISTEM - FASE VERIFIKASI ADMIN] ---
+(Logout, lalu login sebagai Admin: Username 2, Password 2)
+"Sekarang kita berpindah ke Portal Petugas Lab.
+Di Dashboard Admin, petugas disuguhkan statistik inventaris dan notifikasi antrean.
+Petugas membuka menu 'Antrean ACC Peminjaman'.
+
+Di sini petugas dapat melihat detail pengajuan. Petugas memiliki hak untuk Menolak
+atau Menyetujui (ACC). Ketika tombol ACC diklik, sistem mengeksekusi transaksi atomik:
+1. Status transaksi berubah menjadi 'Dipinjam'.
+2. Sistem secara otomatis memilihkan unit fisik siap pakai dari tabel alat_unit
+   (misalnya nomor seri unit ALT-ELK-001-U01) dan menguncinya.
+3. Stok alat berkurang 1.
+4. Mahasiswa kini mendapatkan Nota Bukti Peminjaman Digital lengkap dengan kode unitnya."
+
+--- [SLIDE 6: DEMO SISTEM - FASE PENGEMBALIAN & KASIR LAB] ---
+"Ketika masa peminjaman selesai, mahasiswa mengembalikan instrumen ke laboratorium.
+Petugas lab membuka menu 'Pengembalian Alat'.
+
+Sistem kami mengotomatisasi aturan denda sesuai ketentuan soal UTS:
+- Terdapat masa tenggang toleransi selama 3 hari. Keterlambatan hingga 3 hari
+  dikenai denda Rp 0.
+- Jika terlambat 5 hari, maka hari kena denda adalah 5 dikurangi 3, yaitu 2 hari.
+  Dikalikan tarif Rp 2.000, sehingga denda otomatis muncul Rp 4.000.
+
+Petugas kemudian memeriksa fisik alat. Jika ada unit yang rusak, petugas memilih
+status 'Rusak'. Sistem seketika menambahkan biaya ganti rugi perbaikan Rp 10.000
+per unit rusak. Unit yang rusak tersebut otomatis dipindahkan ke 'stok_rusak' dan
+tidak dapat dipinjam lagi sebelum diservis teknisi.
+
+Di bagian kasir lab:
+Jika mahasiswa membayar langsung, petugas memilih metode Tunai, QRIS, atau Transfer.
+Namun jika belum membawa uang, petugas memilih status 'Belum Lunas'. Sistem akan
+langsung MENCEKAL atau memblokir mahasiswa tersebut dari membuat peminjaman baru
+hingga denda dilunasi di meja lab."
+
+--- [SLIDE 7: FITUR TAMBAHAN & PENUTUP] ---
+"Selain sirkulasi utama, LabTrack juga memiliki Laporan Rekapitulasi Keuangan
+serta menu Pengaturan untuk backup database SQL langsung dari browser.
+
+Seluruh kode, dokumentasi teknis, dan file pengujian telah disinkronkan di GitHub.
+Demikian presentasi sistem LabTrack dari kami. Kami persilakan kepada Bapak/Ibu dosen
+penguji apabila ada pertanyaan atau masukan. Terima kasih."
+
+================================================================================
+7. PERSIAPAN TANYA JAWAB DOSEN (FAQ TEKNIS & KONSEPTUAL)
+================================================================================
+
+Pertanyaan 1: "Mengapa Anda menggunakan Framework Laravel dan bukan PHP Native?"
+Jawaban:
+"Kami memilih Laravel 12 karena menyediakan standar keamanan enterprise secara
+bawaan, seperti proteksi CSRF token, hashing password Bcrypt, dan pencegahan
+SQL Injection melalui PDO Prepared Statements. Selain itu, fitur Database Migration
+memudahkan standarisasi skema database di seluruh tim, serta didukung automated
+testing PHPUnit untuk menjamin keandalan sistem."
+
+Pertanyaan 2: "Bagaimana cara sistem mengatasi jika ada dua mahasiswa yang
+mengajukan unit alat terakhir pada detik yang bersamaan (Race Condition)?"
+Jawaban:
+"Kami menerapkan Database Transaction dengan metode Row-Level Locking, yaitu
+DB::transaction() dan Eloquent lockForUpdate() pada saat admin menyetujui peminjaman.
+Transaksi yang masuk lebih dulu akan mengunci baris data stok alat tersebut. Transaksi
+kedua akan menunggu hingga transaksi pertama selesai, membaca stok terbaru (yang sudah 0),
+dan secara otomatis menolak pengajuan kedua karena stok telah habis."
+
+Pertanyaan 3: "Mengapa Anda memisahkan tabel 'alat' dan tabel 'alat_unit'?"
+Jawaban:
+"Karena laboratorium mengelola barang inventaris fisik bernilai tinggi. Satu jenis
+alat (misalnya Multimeter Digital Sanwa) memiliki banyak fisik barang dengan barcode,
+nomor seri pabrik, dan riwayat kondisi fisik yang berbeda-beda. Dengan adanya tabel
+'alat_unit', kita bisa melacak secara presisi unit fisik mana yang sedang dipinjam
+mahasiswa A dan unit fisik mana yang sedang di karantina perbaikan."
+
+Pertanyaan 4: "Di mana logika perhitungan denda 3 hari dan tarif Rp 2.000 ditaruh?"
+Jawaban:
+"Logika tersebut dienkapsulasi pada PengembalianController.php menggunakan library
+Carbon. Sistem menghitung selisih hari antara tanggal kembali aktual dengan tanggal
+jatuh tempo. Jika selisih hari lebih dari 3 hari, maka hari kena denda adalah selisih
+hari dikurangi 3, kemudian dikalikan nominal denda harian yang tersimpan di sistem."
+
+Pertanyaan 5: "Bagaimana mekanisme pencekalan (blacklist) mahasiswa yang nunggak denda?"
+Jawaban:
+"Pada saat mahasiswa membuka form pengajuan pinjaman, controller memeriksa apakah
+mahasiswa tersebut memiliki transaksi di tabel peminjaman dengan status_pembayaran
+sama dengan 'belum_lunas'. Jika ditemukan, sistem langsung memblokir akses form dan
+menampilkan notifikasi peringatan bahwa mahasiswa memiliki tunggakan denda yang harus
+diselesaikan terlebih dahulu di laboratorium."
+
+================================================================================
+                           SELESAI & SUKSES UTS!
+================================================================================
